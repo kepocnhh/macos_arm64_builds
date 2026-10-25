@@ -6,6 +6,7 @@ unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
 unset BUILDS_JOBS
+unset BUILDS_CHECKS
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
@@ -28,6 +29,9 @@ while [[ $# -gt 0 ]]; do
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
+  '--checks')
+   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_CHECKS="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
@@ -81,6 +85,13 @@ fi
 
 if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
+
+[[ ! -v BUILDS_CHECKS ]] && BUILDS_CHECKS='false'
+
+case "${BUILDS_CHECKS}" in
+ 'false'|'true');;
+ *) echo 'Wrong checks!' >&2; exit 1;;
+esac
 
 BUILDS_SUBJECT='gnupg'
 BUILDS_ARCH='arm64'
@@ -194,12 +205,18 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  TIME_NOW="$(date +%s%3N)"
  echo "Make ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
   >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
- TIME_START="$(date +%s%3N)"
+ #
+ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
+  TIME_START="$(date +%s%3N)"
+  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make check)
+  if [[ $? != 0 ]]; then echo "Check ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+  TIME_NOW="$(date +%s%3N)"
+  echo "Check ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
+   >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+ fi
+ #
  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make install)
  if [[ $? != 0 ]]; then echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
- TIME_NOW="$(date +%s%3N)"
- echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
-  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 done
 
 #
