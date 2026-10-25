@@ -109,7 +109,7 @@ if [[ -v BUILDS_OPENSSL_VERSION ]]; then
  if [[ -z "${BUILDS_OPENSSL_VERSION}" ]]; then
   echo 'No openssl version!' >&2; exit 1; fi
 else
- BUILDS_OPENSSL_VERSION='4.0.3'
+ BUILDS_OPENSSL_VERSION='3.6.5'
 fi
 
 #
@@ -200,6 +200,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 #
 
+TIME_START="$(date +%s%3N)"
 rm -rf "${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
@@ -210,9 +211,16 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
   ./Configure darwin64-arm64 --prefix="${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" --openssldir='/dev/null' no-shared)
 if [[ $? != 0 ]]; then echo "Configure openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
+TIME_NOW="$(date +%s%3N)"
+echo "Configure openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+ >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
 
+TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make "-j${BUILDS_JOBS}")
 if [[ $? != 0 ]]; then echo "Make openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
+TIME_NOW="$(date +%s%3N)"
+echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+ >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make install_sw)
 if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
@@ -225,17 +233,29 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 #
 
-rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
-mkdir -p "${BUILDS_WORKDIR}/bin/"
-
+TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
   ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --with-openssl="${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" --without-libpsl --disable-shared)
-
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+TIME_NOW="$(date +%s%3N)"
+echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+ >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+
+#
+
+TIME_START="$(date +%s%3N)"
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && make "-j${BUILDS_JOBS}")
+if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+TIME_NOW="$(date +%s%3N)"
+echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+ >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && make install)
+if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
 
