@@ -160,4 +160,19 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 #
 
+rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+mkdir -p "${BUILDS_WORKDIR}/bin/"
+
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && CC='/usr/bin/clang' \
+  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
+  CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
+  LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
+  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --without-ssl)
+
+if [[ $? != 0 ]]; then
+ echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+#
+
 echo 'Not implemented!' >&2; exit 1 # todo
