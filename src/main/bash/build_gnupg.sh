@@ -235,5 +235,8 @@ if [[ $? != 0 ]]; then
 
 #
 
-rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
+ rm -rf "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/"
+done
+
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
