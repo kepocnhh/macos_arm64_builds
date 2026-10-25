@@ -103,27 +103,23 @@ fi
 
 #
 
-SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2"
-rm "${BUILDS_WORKDIR}/${SUBJECT}"
-
-HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
- --url "https://${BUILDS_SUBJECT}.org/ftp/gcrypt/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.bz2" \
- -o "${BUILDS_WORKDIR}/${SUBJECT}")
-
-if [[ $? -ne 0 ]]; then
- echo "Request \"${SUBJECT}\" error!" >&2; exit 1
-elif [[ "${HTTP_CODE}" != '200' ]]; then
- echo "Response \"${SUBJECT}\" error!" >&2; exit 1
-fi
+SUBJECTS=(
+ 'libgpg-error' '1.61'
+ 'libgcrypt' '1.12.4'
+ 'libassuan' '3.0.2'
+ 'libksba' '1.8.1'
+ 'npth' '1.8'
+ "${BUILDS_SUBJECT}" "${BUILDS_VERSION}"
+)
 
 #
 
-if [[ -v BUILDS_PUBLIC_KEY ]]; then
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2.sig"
+for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
+ SUBJECT="${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
 
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
-  --url "https://${BUILDS_SUBJECT}.org/ftp/gcrypt/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.bz2.sig" \
+  --url "https://${BUILDS_SUBJECT}.org/ftp/gcrypt/${SUBJECTS[i]}/${SUBJECTS[i]}-${SUBJECTS[i+1]}.tar.bz2" \
   -o "${BUILDS_WORKDIR}/${SUBJECT}")
 
  if [[ $? -ne 0 ]]; then
@@ -131,28 +127,78 @@ if [[ -v BUILDS_PUBLIC_KEY ]]; then
  elif [[ "${HTTP_CODE}" != '200' ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
+done
 
- GPG_HOMEDIR="$(mktemp -d)"
- gpg --homedir "${GPG_HOMEDIR}" --no-default-keyring --keyring "${BUILDS_PUBLIC_KEY}" \
-  --verify "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2.sig" \
-  "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2"
+#
 
- if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2.sig"
- rm -rf "${GPG_HOMEDIR}"
+if [[ -v BUILDS_PUBLIC_KEY ]]; then
+ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
+  SUBJECT="${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2.sig"
+  rm "${BUILDS_WORKDIR}/${SUBJECT}"
+  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
+   --url "https://${BUILDS_SUBJECT}.org/ftp/gcrypt/${SUBJECTS[i]}/${SUBJECTS[i]}-${SUBJECTS[i+1]}.tar.bz2.sig" \
+   -o "${BUILDS_WORKDIR}/${SUBJECT}")
+  if [[ $? -ne 0 ]]; then
+   echo "Request \"${SUBJECT}\" error!" >&2; exit 1
+  elif [[ "${HTTP_CODE}" != '200' ]]; then
+   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
+  fi
+  GPG_HOMEDIR="$(mktemp -d)"
+  gpg --homedir "${GPG_HOMEDIR}" --no-default-keyring --keyring "${BUILDS_PUBLIC_KEY}" \
+   --verify "${BUILDS_WORKDIR}/${SUBJECT}" \
+   "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2"
+  if [[ $? != 0 ]]; then echo "Verify ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+  rm "${BUILDS_WORKDIR}/${SUBJECT}"
+  rm -rf "${GPG_HOMEDIR}"
+ done
 fi
 
 #
 
-rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
+for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
+ rm -rf "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/"
+ tar -xf "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2" \
+  -C "${BUILDS_WORKDIR}/sources/"
+ if [[ $? != 0 ]]; then
+  echo "Untar ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ rm "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2"
+done
 
-tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2" \
- -C "${BUILDS_WORKDIR}/sources/"
+#
 
-if [[ $? != 0 ]]; then
- echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+mkdir -p "${BUILDS_WORKDIR}/bin/"
+:> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
+ TIME_START="$(date +%s%3N)"
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
+  && CC='/usr/bin/clang' \
+   CXX='/usr/bin/clang++' \
+   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
+   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
+   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
+   PATH="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/bin:${PATH}" \
+   ./configure --enable-static --disable-shared --disable-asm --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/")
+ if [[ $? != 0 ]]; then echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ TIME_NOW="$(date +%s%3N)"
+ echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+ #
+ TIME_START="$(date +%s%3N)"
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make "-j${BUILDS_JOBS}")
+ if [[ $? != 0 ]]; then echo "Make ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ TIME_NOW="$(date +%s%3N)"
+ echo "Make ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+ TIME_START="$(date +%s%3N)"
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make install)
+ if [[ $? != 0 ]]; then echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ TIME_NOW="$(date +%s%3N)"
+ echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+done
 
-rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.bz2"
+#
 
 echo 'Not implemented!'; exit 1 # todo
