@@ -6,6 +6,7 @@ unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
 unset BUILDS_JOBS
+unset BUILDS_OPENSSL_VERSION
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
@@ -27,6 +28,9 @@ while [[ $# -gt 0 ]]; do
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
+  '--openssl_version')
+   if [[ -v BUILDS_OPENSSL_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_OPENSSL_VERSION="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
@@ -101,15 +105,31 @@ elif [[ ! -d "${BUILDS_SDKROOT}" ]]; then
  echo "\"${BUILDS_SDKROOT}\" is not a dir!" >&2; exit 1
 fi
 
+if [[ -v BUILDS_OPENSSL_VERSION ]]; then
+ if [[ -z "${BUILDS_OPENSSL_VERSION}" ]]; then
+  echo 'No openssl version!' >&2; exit 1; fi
+else
+ BUILDS_OPENSSL_VERSION='4.0.3'
+fi
+
 #
 
 SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
 rm "${BUILDS_WORKDIR}/${SUBJECT}"
-
 HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
  --url "https://curl.se/download/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz" \
  -o "${BUILDS_WORKDIR}/${SUBJECT}")
+if [[ $? -ne 0 ]]; then
+ echo "Request \"${SUBJECT}\" error!" >&2; exit 1
+elif [[ "${HTTP_CODE}" != '200' ]]; then
+ echo "Response \"${SUBJECT}\" error!" >&2; exit 1
+fi
 
+SUBJECT="openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz"
+rm "${BUILDS_WORKDIR}/${SUBJECT}"
+HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
+ -L --url "https://github.com/openssl/openssl/releases/download/openssl-${BUILDS_OPENSSL_VERSION}/openssl-${BUILDS_OPENSSL_VERSION}.tar.gz" \
+ -o "${BUILDS_WORKDIR}/${SUBJECT}")
 if [[ $? -ne 0 ]]; then
  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
 elif [[ "${HTTP_CODE}" != '200' ]]; then
@@ -135,7 +155,26 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
  GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
  gpg "${GPG_ARGS[@]}"
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
+ rm "${BUILDS_WORKDIR}/${SUBJECT}"
+ rm -rf "${GPG_HOMEDIR}"
+ #
+ SUBJECT="openssl-${BUILDS_OPENSSL_VERSION}-sources.sig"
+ rm "${BUILDS_WORKDIR}/${SUBJECT}"
+ HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
+  -L --url "https://github.com/openssl/openssl/releases/download/openssl-${BUILDS_OPENSSL_VERSION}/openssl-${BUILDS_OPENSSL_VERSION}.tar.gz.asc" \
+  -o "${BUILDS_WORKDIR}/${SUBJECT}")
+ if [[ $? -ne 0 ]]; then
+  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
+ elif [[ "${HTTP_CODE}" != '200' ]]; then
+  echo "Response \"${SUBJECT}\" error!" >&2; exit 1
+ fi
+ GPG_HOMEDIR="$(mktemp -d)"
+ GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
+ for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
+ GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz")
+ gpg "${GPG_ARGS[@]}"
+ if [[ $? != 0 ]]; then echo "Verify openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
+ rm "${BUILDS_WORKDIR}/${SUBJECT}"
  rm -rf "${GPG_HOMEDIR}"
 fi
 
@@ -143,14 +182,15 @@ fi
 
 rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
-
-tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz" \
- -C "${BUILDS_WORKDIR}/sources/"
-
-if [[ $? != 0 ]]; then
- echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
-
+tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
+if [[ $? != 0 ]]; then echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
+
+rm -rf "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/"
+mkdir -p "${BUILDS_WORKDIR}/sources/"
+tar -xf "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
+if [[ $? != 0 ]]; then echo "Untar openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
+rm "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz"
 
 #
 
@@ -160,6 +200,8 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 #
 
+echo 'Not implemented!' >&2; exit 1 # todo
+
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
 
@@ -168,7 +210,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
-  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --without-ssl)
+  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --without-ssl --without-libpsl)
 
 if [[ $? != 0 ]]; then
  echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
