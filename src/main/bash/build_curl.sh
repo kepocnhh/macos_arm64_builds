@@ -214,6 +214,9 @@ if [[ $? != 0 ]]; then echo "Configure openssl-${BUILDS_OPENSSL_VERSION} error!"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make "-j${BUILDS_JOBS}")
 if [[ $? != 0 ]]; then echo "Make openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 
+(set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make install_sw)
+if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
+
 #
 
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
@@ -221,8 +224,6 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 :> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
 #
-
-echo 'Not implemented!' >&2; exit 1 # todo
 
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
@@ -232,10 +233,9 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
-  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --without-ssl --without-libpsl)
+  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --with-openssl="${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" --without-libpsl --disable-shared)
 
-if [[ $? != 0 ]]; then
- echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
 
