@@ -10,3 +10,11 @@ macos arm64 builds
 ```
 
 ---
+
+#### build [git](https://kernel.org/pub/software/scm/git/)
+
+```
+./src/main/bash/build_git.sh --version "${GIT_VERSION}" --public_key ./src/main/res/e1f0.gpg
+```
+
+---
