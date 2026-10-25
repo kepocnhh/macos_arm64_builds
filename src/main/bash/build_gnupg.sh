@@ -172,6 +172,9 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 :> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  TIME_START="$(date +%s%3N)"
+ CONFIGURE_ARGS=("--prefix=${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/")
+ [[ "${SUBJECTS[i]}" == 'libgcrypt' ]] && CONFIGURE_ARGS+=('--disable-asm')
+ [[ "${SUBJECTS[i]}" != "${BUILDS_SUBJECT}" ]] && CONFIGURE_ARGS+=('--enable-static' '--disable-shared')
  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
   && CC='/usr/bin/clang' \
    CXX='/usr/bin/clang++' \
@@ -179,7 +182,7 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
    CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
    LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
    PATH="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/bin:${PATH}" \
-   ./configure --enable-static --disable-shared --disable-asm --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/")
+   ./configure "${CONFIGURE_ARGS[@]}")
  if [[ $? != 0 ]]; then echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
