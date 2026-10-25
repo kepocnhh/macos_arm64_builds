@@ -133,7 +133,7 @@ if [[ -v BUILDS_PUBLIC_KEY ]]; then
  fi
 
  rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar"
- gzip -dk "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar"
+ gzip -dk "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
  if [[ $? != 0 ]]; then echo "Gzip ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  GPG_HOMEDIR="$(mktemp -d)"
  gpg --homedir "${GPG_HOMEDIR}" --no-default-keyring --keyring "${BUILDS_PUBLIC_KEY}" \
@@ -188,6 +188,14 @@ if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&
 TIME_NOW="$(date +%s%3N)"
 echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+
+#
+
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && make install)
+
+if [[ $? != 0 ]]; then
+ echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
 
