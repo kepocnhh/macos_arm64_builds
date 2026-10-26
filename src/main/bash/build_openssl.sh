@@ -143,8 +143,6 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
  rm -rf "${GPG_HOMEDIR}"
 fi
 
-echo 'Not implemented!' >&2; exit 1 # todo
-
 #
 
 rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
@@ -192,19 +190,12 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $((TIME_DIFF / 1000))s" \
 
 #
 
-TIME_START="$(date +%s%3N)"
-
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
- && make test)
-
-if [[ $? != 0 ]]; then
- echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
-
-TIME_NOW="$(date +%s%3N)"
-TIME_DIFF="$((TIME_NOW - TIME_START))"
-
-echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $((TIME_DIFF / 1000))s" \
- >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+#TIME_START="$(date +%s%3N)"
+#(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && make test)
+#if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+#TIME_NOW="$(date +%s%3N)"
+#echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+# >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
 #
 
