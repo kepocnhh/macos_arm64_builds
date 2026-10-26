@@ -19,6 +19,14 @@ macos arm64 builds
 
 ---
 
+#### build [coreutils](https://ftp.gnu.org/gnu/coreutils/)
+
+```
+./src/main/bash/build_coreutils.sh --jobs max --version "${COREUTILS_VERSION}" --public_key ./src/main/res/6c37.gpg
+```
+
+---
+
 #### build [tar](https://ftp.gnu.org/gnu/tar/)
 
 ```
