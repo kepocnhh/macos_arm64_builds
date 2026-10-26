@@ -25,6 +25,10 @@ macos arm64 builds
 ./src/main/bash/build_git.sh --version "${GIT_VERSION}" --public_key ./src/main/res/e1f0.gpg
 ```
 
+```
+git config --global credential.helper /Applications/Xcode.app/Contents/Developer/usr/libexec/git-core/git-credential-osxkeychain
+```
+
 ---
 
 #### build [curl](https://curl.se/download/)
