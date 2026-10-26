@@ -27,6 +27,14 @@ macos arm64 builds
 
 ---
 
+#### build [nano](https://ftp.gnu.org/gnu/nano/)
+
+```
+./src/main/bash/build_nano.sh --jobs max --version "${NANO_VERSION}" --public_key ./src/main/res/168e.gpg
+```
+
+---
+
 #### build [gnupg](https://gnupg.org/download/index.html)
 
 ```
