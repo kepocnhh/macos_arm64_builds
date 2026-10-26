@@ -280,4 +280,19 @@ if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!"
 
 #
 
-echo 'Not implemented!' >&2; exit 1 # todo
+BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
+[[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
+
+rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
+
+(set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" .)
+
+if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+#
+
+rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
+ "${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
