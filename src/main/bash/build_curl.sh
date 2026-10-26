@@ -117,7 +117,7 @@ else
 fi
 
 if [[ -v BUILDS_APPLE_SECTRUST ]]; then
- case "${BUILDS_CHECKS}" in
+ case "${BUILDS_APPLE_SECTRUST}" in
   'false'|'true');;
   '') echo 'No apple sectrust!' >&2; exit 1;;
   *) echo 'Wrong apple sectrust!' >&2; exit 1;;
