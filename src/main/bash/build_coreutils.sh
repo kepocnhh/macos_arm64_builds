@@ -188,17 +188,22 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
 #
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
- && make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install \
- && cp "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/libexec/coreutils/libstdbuf.so" \
-  "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/")
+ && make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
-VALUES=('date' 'stdbuf')
-for VALUE in "${VALUES[@]}"; do
- (set -x; cd "${BUILDS_WORKDIR}" \
-  && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${VALUE}" --version)
- if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+(set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && cp './usr/local/libexec/coreutils/libstdbuf.so' './usr/local/bin/')
+if [[ $? != 0 ]]; then echo 'Install libstdbuf.so error!' >&2; exit 1; fi
+
+VALUES=(
+ 'date' '--version'
+ 'stdbuf' "-oL ./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/printf ok"
+)
+for ((i = 0; i < ${#VALUES[@]}; i+=2)); do
+ (set -x; cd "${BUILDS_WORKDIR}" && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${VALUES[i]}" ${VALUES[i+1]})
+ if [[ $? != 0 ]]; then echo "Test ${VALUES[i]} error!" >&2; exit 1; fi
 done
+
 #
 
 BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
