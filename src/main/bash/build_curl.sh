@@ -7,6 +7,7 @@ unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
 unset BUILDS_JOBS
 unset BUILDS_OPENSSL_VERSION
+unset BUILDS_APPLE_SECTRUST
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
@@ -31,6 +32,9 @@ while [[ $# -gt 0 ]]; do
   '--openssl_version')
    if [[ -v BUILDS_OPENSSL_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_OPENSSL_VERSION="$2"; shift 2;;
+  '--apple_sectrust')
+   if [[ -v BUILDS_APPLE_SECTRUST ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_APPLE_SECTRUST="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
@@ -110,6 +114,16 @@ if [[ -v BUILDS_OPENSSL_VERSION ]]; then
   echo 'No openssl version!' >&2; exit 1; fi
 else
  BUILDS_OPENSSL_VERSION='3.6.5'
+fi
+
+if [[ -v BUILDS_APPLE_SECTRUST ]]; then
+ case "${BUILDS_CHECKS}" in
+  'false'|'true');;
+  '') echo 'No apple sectrust!' >&2; exit 1;;
+  *) echo 'Wrong apple sectrust!' >&2; exit 1;;
+ esac
+else
+ BUILDS_APPLE_SECTRUST='false'
 fi
 
 #
@@ -234,12 +248,19 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 #
 
 TIME_START="$(date +%s%3N)"
+CONFIGURE_ARGS=(
+ "--prefix=${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+ "--with-openssl=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
+ '--without-libpsl'
+ '--disable-shared'
+)
+[[ "${BUILDS_APPLE_SECTRUST}" == 'true' ]] && CONFIGURE_ARGS+=('--with-apple-sectrust')
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
-  ./configure --prefix="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" --with-openssl="${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" --without-libpsl --disable-shared)
+  ./configure "${CONFIGURE_ARGS[@]}")
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
