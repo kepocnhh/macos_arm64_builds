@@ -1,6 +1,6 @@
 #!/usr/local/bin/bash
 
-unset BUILDS_PUBLIC_KEY
+unset BUILDS_PUBLIC_KEYS
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
@@ -11,8 +11,7 @@ while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
  case "$1" in
   '--public_key')
-   if [[ -v BUILDS_PUBLIC_KEY ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_PUBLIC_KEY="$2"; shift 2;;
+   BUILDS_PUBLIC_KEYS+=("$2"); shift 2;;
   '--version')
    if [[ -v BUILDS_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_VERSION="$2"; shift 2;;
@@ -32,8 +31,10 @@ while [[ $# -gt 0 ]]; do
  esac
 done
 
-if [[ -v BUILDS_PUBLIC_KEY ]]; then
- if [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
+for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
+ if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo 'No public key!' >&2; exit 1
+ elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
  elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
@@ -42,7 +43,7 @@ if [[ -v BUILDS_PUBLIC_KEY ]]; then
  elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
  fi
-fi
+done
 
 if [[ -z "${BUILDS_VERSION}" ]]; then
  echo 'No version!' >&2; exit 1; fi
@@ -118,8 +119,8 @@ fi
 
 #
 
-if [[ -v BUILDS_PUBLIC_KEY ]]; then
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz.sig"
+if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
 
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
@@ -133,14 +134,16 @@ if [[ -v BUILDS_PUBLIC_KEY ]]; then
  fi
 
  GPG_HOMEDIR="$(mktemp -d)"
- gpg --homedir "${GPG_HOMEDIR}" --no-default-keyring --keyring "${BUILDS_PUBLIC_KEY}" \
-  --verify "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz.sig" \
-  "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
-
+ GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
+ for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
+ GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
+ gpg "${GPG_ARGS[@]}"
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz.sig"
+ rm "${BUILDS_WORKDIR}/${SUBJECT}"
  rm -rf "${GPG_HOMEDIR}"
 fi
+
+echo 'Not implemented!' >&2; exit 1 # todo
 
 #
 
@@ -215,7 +218,7 @@ if [[ $? != 0 ]]; then
 #
 
 BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
-[[ ! -v BUILDS_PUBLIC_KEY ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
+[[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 
