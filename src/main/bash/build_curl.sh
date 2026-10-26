@@ -223,7 +223,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
-  ./Configure darwin64-arm64 --prefix="${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" --openssldir='/dev/null' no-shared)
+  ./Configure darwin64-arm64 --prefix='/usr/local' --openssldir='/dev/null' no-shared no-module)
 if [[ $? != 0 ]]; then echo "Configure openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
@@ -236,7 +236,8 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
 
-(set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make install_sw)
+(set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
+ && make "DESTDIR=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" install_sw)
 if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 
 #
@@ -249,8 +250,8 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 TIME_START="$(date +%s%3N)"
 CONFIGURE_ARGS=(
- "--prefix=${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
- "--with-openssl=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
+ '--prefix=/usr/local'
+ "--with-openssl=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/usr/local/"
  '--without-libpsl'
  '--disable-shared'
 )
@@ -275,7 +276,8 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && make install)
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" make install)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
@@ -285,8 +287,8 @@ BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 
-(set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
- && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" .)
+(set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/" \
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" 'bin/curl')
 
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
