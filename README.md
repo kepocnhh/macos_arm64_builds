@@ -35,6 +35,14 @@ macos arm64 builds
 
 ---
 
+#### build [xz](https://github.com/tukaani-project/xz/releases/)
+
+```
+./src/main/bash/build_xz.sh --jobs max --version "${XZ_VERSION}" --public_key ./src/main/res/3690.gpg
+```
+
+---
+
 #### build [gnupg](https://gnupg.org/download/index.html)
 
 ```
