@@ -19,6 +19,14 @@ macos arm64 builds
 
 ---
 
+#### build [tar](https://ftp.gnu.org/gnu/tar/)
+
+```
+./src/main/bash/build_tar.sh --jobs max --version "${TAR_VERSION}" --public_key ./src/main/res/325f.gpg
+```
+
+---
+
 #### build [gnupg](https://gnupg.org/download/index.html)
 
 ```
