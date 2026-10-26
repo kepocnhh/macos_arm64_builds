@@ -66,7 +66,7 @@ git config --global credential.helper /Applications/Xcode.app/Contents/Developer
 #### build [openssl](https://github.com/openssl/openssl/releases)
 
 ```
-./src/main/bash/build_openssl.sh --jobs max --version "${OPENSSL_VERSION}" --public_key ./src/main/res/ba54.gpg
+./src/main/bash/build_openssl.sh --jobs max --version "${OPENSSL_VERSION}" --public_key ./src/main/res/ba54.gpg --checks true
 ```
 
 ---
