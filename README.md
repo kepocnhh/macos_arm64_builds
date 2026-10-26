@@ -3,6 +3,14 @@ macos arm64 builds
 
 ---
 
+#### build [make](https://ftp.gnu.org/gnu/make/)
+
+```
+./src/main/bash/build_make.sh --version "${MAKE_VERSION}" --public_key ./src/main/res/b250.gpg
+```
+
+---
+
 #### build [gnupg](https://gnupg.org/download/index.html)
 
 ```
