@@ -11,6 +11,14 @@ macos arm64 builds
 
 ---
 
+#### build [bash](https://ftp.gnu.org/gnu/bash/)
+
+```
+./src/main/bash/build_bash.sh --jobs max --version "${BASH_VERSION}" --public_key ./src/main/res/7c01.gpg
+```
+
+---
+
 #### build [gnupg](https://gnupg.org/download/index.html)
 
 ```
