@@ -6,7 +6,7 @@ macos arm64 builds
 #### build [make](https://ftp.gnu.org/gnu/make/)
 
 ```
-./src/main/bash/build_make.sh --version "${MAKE_VERSION}" --public_key ./src/main/res/b250.gpg
+./src/main/bash/build_make.sh --version "${MAKE_VERSION}" --public_key ./src/main/res/b250.gpg --public_key ./src/main/res/96b0.gpg
 ```
 
 ---
