@@ -6,6 +6,7 @@ unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
 unset BUILDS_JOBS
+unset BUILDS_CHECKS
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
@@ -27,6 +28,9 @@ while [[ $# -gt 0 ]]; do
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
+  '--checks')
+   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_CHECKS="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
@@ -81,6 +85,16 @@ fi
 
 if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
+
+if [[ -v BUILDS_CHECKS ]]; then
+ case "${BUILDS_CHECKS}" in
+  'false'|'true');;
+  '') echo 'No checks!' >&2; exit 1;;
+  *) echo 'Wrong checks!' >&2; exit 1;;
+ esac
+else
+ BUILDS_CHECKS='false'
+fi
 
 BUILDS_SUBJECT='git'
 BUILDS_ARCH='arm64'
@@ -190,6 +204,20 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
 
 #
 
+if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
+ TIME_START="$(date +%s%3N)"
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+  && make test RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
+  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
+ if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+ TIME_NOW="$(date +%s%3N)"
+ echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+fi
+
+#
+
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
@@ -204,6 +232,7 @@ if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} err
 
 BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
+[[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 (set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/" \
