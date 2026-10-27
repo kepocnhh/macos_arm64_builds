@@ -177,21 +177,11 @@ echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) /
 #
 
 BUILDS_PYTHON_SCRIPTS=()
-BUILDS_PERL_SCRIPTS=(
- 'git-archimport.perl'
- 'git-cvsexportcommit.perl'
- 'git-cvsimport.perl'
- 'git-cvsserver.perl'
- 'git-send-email.perl'
-)
-
-#
 
 TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" \
- SCRIPT_PERL="${BUILDS_PERL_SCRIPTS[*]}" \
  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
@@ -203,7 +193,6 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" \
- SCRIPT_PERL="${BUILDS_PERL_SCRIPTS[*]}" \
  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
