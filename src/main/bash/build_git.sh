@@ -202,6 +202,16 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
+TIME_START="$(date +%s%3N)"
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/contrib/credential/osxkeychain/" \
+ && make "-j${BUILDS_JOBS}" CC='/usr/bin/clang' \
+ CFLAGS="-O3 -Wall -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION} -isysroot ${BUILDS_SDKROOT}" \
+ LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}")
+if [[ $? != 0 ]]; then echo 'Make git-credential-osxkeychain error!' >&2; exit 1; fi
+TIME_NOW="$(date +%s%3N)"
+echo "Make git-credential-osxkeychain $(((TIME_NOW - TIME_START) / 1000))s" \
+ >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+
 #
 
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
@@ -224,9 +234,20 @@ fi
  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
+BUILDS_SRC="${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/contrib/credential/osxkeychain/git-credential-osxkeychain"
+BUILDS_DST="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/libexec/git-core/git-credential-osxkeychain"
+cp "${BUILDS_SRC}" "${BUILDS_DST}"
+if [[ $? != 0 ]]; then echo 'Install git-credential-osxkeychain error!' >&2; exit 1; fi
+
+#
+
 (set -x; cd "${BUILDS_WORKDIR}" \
  && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/bin/${BUILDS_SUBJECT}" --version)
 if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+(set -x; cd "${BUILDS_WORKDIR}" \
+ && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/libexec/git-core/git-credential-osxkeychain" noop </dev/null)
+if [[ $? != 0 ]]; then echo "Get version git-credential-osxkeychain error!" >&2; exit 1; fi
 
 #
 
