@@ -179,7 +179,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
-  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
+  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION} -DICONV_RESTART_RESET" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
   ./configure --prefix='/usr' --sysconfdir='/etc')
@@ -195,6 +195,7 @@ BUILDS_PYTHON_SCRIPTS=()
 TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+ NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
@@ -202,15 +203,11 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
-TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/contrib/credential/osxkeychain/" \
  && make "-j${BUILDS_JOBS}" CC='/usr/bin/clang' \
- CFLAGS="-O3 -Wall -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION} -isysroot ${BUILDS_SDKROOT}" \
- LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}")
+ CFLAGS="-O3 -Wall -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION} -isysroot ${BUILDS_SDKROOT} -I../../.. -DNO_OPENSSL" \
+ LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION} -framework CoreServices -lz -liconv")
 if [[ $? != 0 ]]; then echo 'Make git-credential-osxkeychain error!' >&2; exit 1; fi
-TIME_NOW="$(date +%s%3N)"
-echo "Make git-credential-osxkeychain $(((TIME_NOW - TIME_START) / 1000))s" \
- >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
 
 #
 
@@ -218,6 +215,7 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
   && make test RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+ NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
@@ -230,6 +228,7 @@ fi
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
