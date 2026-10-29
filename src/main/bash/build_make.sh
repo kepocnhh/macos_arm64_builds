@@ -6,6 +6,7 @@ unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
 unset BUILDS_JOBS
+unset BUILDS_CHECKS
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
@@ -27,6 +28,9 @@ while [[ $# -gt 0 ]]; do
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
+  '--checks')
+   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_CHECKS="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
@@ -81,6 +85,16 @@ fi
 
 if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
+
+if [[ -v BUILDS_CHECKS ]]; then
+ case "${BUILDS_CHECKS}" in
+  'false'|'true');;
+  '') echo 'No checks!' >&2; exit 1;;
+  *) echo 'Wrong checks!' >&2; exit 1;;
+ esac
+else
+ BUILDS_CHECKS='false'
+fi
 
 BUILDS_SUBJECT='make'
 BUILDS_ARCH='arm64'
@@ -174,6 +188,14 @@ if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && ./build.sh)
 
 if [[ $? != 0 ]]; then echo "Build ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+#
+
+if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+  && ./make check "-j${BUILDS_JOBS}")
+ if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+fi
 
 #
 
