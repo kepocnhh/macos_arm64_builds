@@ -50,7 +50,7 @@ git config --global credential.helper osxkeychain
 #### build [make](https://ftp.gnu.org/gnu/make/)
 
 ```
-./src/main/bash/build_make.sh --version "${MAKE_VERSION}" --public_key ./src/main/res/b250.gpg --public_key ./src/main/res/96b0.gpg
+./src/main/bash/build_make.sh --jobs max --version "${MAKE_VERSION}" --public_key ./src/main/res/b250.gpg --public_key ./src/main/res/96b0.gpg --checks true
 ```
 
 ---
