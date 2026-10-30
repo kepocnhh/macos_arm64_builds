@@ -1,92 +1,54 @@
 #!/usr/local/bin/bash
 
+unset BUILDS_CHECKS
+unset BUILDS_JOBS
+unset BUILDS_MIN_CPU
+unset BUILDS_MIN_MACOS
 unset BUILDS_PUBLIC_KEYS
+unset BUILDS_SDKROOT
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
-unset BUILDS_SDKROOT
-unset BUILDS_MIN_MACOS
-unset BUILDS_MIN_CPU
-unset BUILDS_JOBS
-unset BUILDS_CHECKS
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
  case "$1" in
+  '--checks')
+   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_CHECKS="$2"; shift 2;;
+  '--jobs')
+   if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_JOBS="$2"; shift 2;;
+  '--min_cpu')
+   if [[ -v BUILDS_MIN_CPU ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_CPU="$2"; shift 2;;
+  '--min_macos')
+   if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_MACOS="$2"; shift 2;;
   '--public_key')
    BUILDS_PUBLIC_KEYS+=("$2"); shift 2;;
+  '--sdkroot')
+   if [[ -v BUILDS_SDKROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_SDKROOT="$2"; shift 2;;
   '--version')
    if [[ -v BUILDS_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_VERSION="$2"; shift 2;;
   '--workdir')
    if [[ -v BUILDS_WORKDIR ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_WORKDIR="$2"; shift 2;;
-  '--sdkroot')
-   if [[ -v BUILDS_SDKROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_SDKROOT="$2"; shift 2;;
-  '--min_macos')
-   if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_MIN_MACOS="$2"; shift 2;;
-  '--min_cpu')
-   if [[ -v BUILDS_MIN_CPU ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_MIN_CPU="$2"; shift 2;;
-  '--jobs')
-   if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_JOBS="$2"; shift 2;;
-  '--checks')
-   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_CHECKS="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
 
-for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
- if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo 'No public key!' >&2; exit 1
- elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
- elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
- elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is not a file!" >&2; exit 1
- elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
- fi
-done
+#
 
-if [[ -z "${BUILDS_VERSION}" ]]; then
- echo 'No version!' >&2; exit 1; fi
-
-if [[ ! -v BUILDS_WORKDIR ]]; then
- BUILDS_WORKDIR="$(pwd)"; fi
-
-if [[ -z "${BUILDS_WORKDIR}" ]]; then
- echo 'No workdir!' >&2; exit 1
-elif [[ -L "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
-elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
-elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" is not a dir!" >&2; exit 1
-fi
-
-if [[ -v BUILDS_MIN_MACOS ]]; then
- case "${BUILDS_MIN_MACOS}" in
-  '14'|'15'|'26'|'27');;
-  '') echo 'No min macos!' >&2; exit 1;;
-  *) echo 'Wrong min macos!' >&2; exit 1;;
+if [[ -v BUILDS_CHECKS ]]; then
+ case "${BUILDS_CHECKS}" in
+  'false'|'true');;
+  '') echo 'No checks!' >&2; exit 1;;
+  *) echo 'Wrong checks!' >&2; exit 1;;
  esac
 else
- BUILDS_MIN_MACOS='14'
-fi
-
-if [[ -v BUILDS_MIN_CPU ]]; then
- case "${BUILDS_MIN_CPU}" in
-  'm1'|'m2'|'m3'|'m4'|'m5');;
-  '') echo 'No min cpu!' >&2; exit 1;;
-  *) echo 'Wrong min cpu!' >&2; exit 1;;
- esac
-else
- BUILDS_MIN_CPU='m1'
+ BUILDS_CHECKS='false'
 fi
 
 if [[ "${BUILDS_JOBS}" == 'max' ]]; then
@@ -103,20 +65,39 @@ fi
 if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
 
-if [[ -v BUILDS_CHECKS ]]; then
- case "${BUILDS_CHECKS}" in
-  'false'|'true');;
-  '') echo 'No checks!' >&2; exit 1;;
-  *) echo 'Wrong checks!' >&2; exit 1;;
+if [[ -v BUILDS_MIN_CPU ]]; then
+ case "${BUILDS_MIN_CPU}" in
+  'm1'|'m2'|'m3'|'m4'|'m5');;
+  '') echo 'No min cpu!' >&2; exit 1;;
+  *) echo 'Wrong min cpu!' >&2; exit 1;;
  esac
 else
- BUILDS_CHECKS='false'
+ BUILDS_MIN_CPU='m1'
 fi
 
-BUILDS_SUBJECT='make'
-BUILDS_ARCH='arm64'
+if [[ -v BUILDS_MIN_MACOS ]]; then
+ case "${BUILDS_MIN_MACOS}" in
+  '14'|'15'|'26'|'27');;
+  '') echo 'No min macos!' >&2; exit 1;;
+  *) echo 'Wrong min macos!' >&2; exit 1;;
+ esac
+else
+ BUILDS_MIN_MACOS='14'
+fi
 
-#
+for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
+ if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo 'No public key!' >&2; exit 1
+ elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
+ elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
+ elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is not a file!" >&2; exit 1
+ elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
+ fi
+done
 
 if [[ ! -v BUILDS_SDKROOT ]]; then
  BUILDS_SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
@@ -131,6 +112,26 @@ elif [[ ! -e "${BUILDS_SDKROOT}" ]]; then
 elif [[ ! -d "${BUILDS_SDKROOT}" ]]; then
  echo "\"${BUILDS_SDKROOT}\" is not a dir!" >&2; exit 1
 fi
+
+if [[ -z "${BUILDS_VERSION}" ]]; then
+ echo 'No version!' >&2; exit 1; fi
+
+if [[ ! -v BUILDS_WORKDIR ]]; then
+ BUILDS_WORKDIR="$(pwd)"
+elif [[ -z "${BUILDS_WORKDIR}" ]]; then
+ echo 'No workdir!' >&2; exit 1
+elif [[ -L "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
+elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
+elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" is not a dir!" >&2; exit 1
+fi
+
+#
+
+BUILDS_SUBJECT='make'
+BUILDS_ARCH='arm64'
 
 #
 
