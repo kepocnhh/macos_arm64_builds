@@ -4,7 +4,7 @@ unset BUILDS_PUBLIC_KEYS
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
-unset BUILDS_MINVERSION
+unset BUILDS_MIN_MACOS
 unset BUILDS_MIN_CPU
 unset BUILDS_JOBS
 unset BUILDS_CHECKS
@@ -23,9 +23,9 @@ while [[ $# -gt 0 ]]; do
   '--sdkroot')
    if [[ -v BUILDS_SDKROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_SDKROOT="$2"; shift 2;;
-  '--minversion')
-   if [[ -v BUILDS_MINVERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_MINVERSION="$2"; shift 2;;
+  '--min_macos')
+   if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_MACOS="$2"; shift 2;;
   '--min_cpu')
    if [[ -v BUILDS_MIN_CPU ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_MIN_CPU="$2"; shift 2;;
@@ -69,11 +69,14 @@ elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" is not a dir!" >&2; exit 1
 fi
 
-if [[ -v BUILDS_MINVERSION ]]; then
- if [[ -z "${BUILDS_MINVERSION}" ]]; then
-  echo 'No minversion!' >&2; exit 1; fi
+if [[ -v BUILDS_MIN_MACOS ]]; then
+ case "${BUILDS_MIN_MACOS}" in
+  '14'|'15'|'26'|'27');;
+  '') echo 'No min macos!' >&2; exit 1;;
+  *) echo 'Wrong min macos!' >&2; exit 1;;
+ esac
 else
- BUILDS_MINVERSION='14.0'
+ BUILDS_MIN_MACOS='14'
 fi
 
 if [[ -v BUILDS_MIN_CPU ]]; then
@@ -190,9 +193,9 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
-  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MINVERSION}" \
+  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
-  LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
+  LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   ./configure --prefix='/usr/local')
 
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
@@ -226,7 +229,7 @@ if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} err
 
 #
 
-BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
+BUILDS_SUFFIX="macos-${BUILDS_MIN_MACOS}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
 [[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
