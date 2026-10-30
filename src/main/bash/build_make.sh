@@ -5,7 +5,7 @@ unset BUILDS_JOBS
 unset BUILDS_MIN_CPU
 unset BUILDS_MIN_MACOS
 unset BUILDS_PUBLIC_KEYS
-unset BUILDS_SDKROOT
+unset BUILDS_SDK_ROOT
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
 
@@ -26,9 +26,9 @@ while [[ $# -gt 0 ]]; do
    BUILDS_MIN_MACOS="$2"; shift 2;;
   '--public_key')
    BUILDS_PUBLIC_KEYS+=("$2"); shift 2;;
-  '--sdkroot')
-   if [[ -v BUILDS_SDKROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_SDKROOT="$2"; shift 2;;
+  '--sdk_root')
+   if [[ -v BUILDS_SDK_ROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_SDK_ROOT="$2"; shift 2;;
   '--version')
    if [[ -v BUILDS_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_VERSION="$2"; shift 2;;
@@ -53,11 +53,9 @@ fi
 
 if [[ "${BUILDS_JOBS}" == 'max' ]]; then
  BUILDS_JOBS="$(sysctl -n hw.ncpu)"
- if [[ $? != 0 ]]; then
-  echo 'Get jobs error!' >&2; exit 1; fi
+ if [[ $? != 0 ]]; then echo 'Get jobs error!' >&2; exit 1; fi
 elif [[ -v BUILDS_JOBS ]]; then
- if [[ -z "${BUILDS_JOBS}" ]]; then
-  echo 'No jobs!' >&2; exit 1; fi
+ if [[ -z "${BUILDS_JOBS}" ]]; then echo 'No jobs!' >&2; exit 1; fi
 else
  BUILDS_JOBS=1
 fi
@@ -99,26 +97,26 @@ for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
  fi
 done
 
-if [[ ! -v BUILDS_SDKROOT ]]; then
- BUILDS_SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
- if [[ $? != 0 ]]; then
-  echo 'Get sdk root error!' >&2; exit 1; fi
+if [[ ! -v BUILDS_SDK_ROOT ]]; then
+ BUILDS_SDK_ROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+ if [[ $? != 0 ]]; then echo 'Get sdk root error!' >&2; exit 1; fi
 fi
 
-if [[ -z "${BUILDS_SDKROOT}" ]]; then
+if [[ -z "${BUILDS_SDK_ROOT}" ]]; then
  echo 'No sdk root!' >&2; exit 1
-elif [[ ! -e "${BUILDS_SDKROOT}" ]]; then
- echo "\"${BUILDS_SDKROOT}\" does not exist!" >&2; exit 1
-elif [[ ! -d "${BUILDS_SDKROOT}" ]]; then
- echo "\"${BUILDS_SDKROOT}\" is not a dir!" >&2; exit 1
+elif [[ ! -e "${BUILDS_SDK_ROOT}" ]]; then
+ echo "\"${BUILDS_SDK_ROOT}\" does not exist!" >&2; exit 1
+elif [[ ! -d "${BUILDS_SDK_ROOT}" ]]; then
+ echo "\"${BUILDS_SDK_ROOT}\" is not a dir!" >&2; exit 1
 fi
 
 if [[ -z "${BUILDS_VERSION}" ]]; then
  echo 'No version!' >&2; exit 1; fi
 
 if [[ ! -v BUILDS_WORKDIR ]]; then
- BUILDS_WORKDIR="$(pwd)"
-elif [[ -z "${BUILDS_WORKDIR}" ]]; then
+ BUILDS_WORKDIR="$(pwd)"; fi
+
+if [[ -z "${BUILDS_WORKDIR}" ]]; then
  echo 'No workdir!' >&2; exit 1
 elif [[ -L "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
@@ -195,8 +193,8 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
-  CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
-  LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
+  CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
+  LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   ./configure --prefix='/usr/local')
 
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
