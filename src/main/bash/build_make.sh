@@ -5,6 +5,7 @@ unset BUILDS_VERSION
 unset BUILDS_WORKDIR
 unset BUILDS_SDKROOT
 unset BUILDS_MINVERSION
+unset BUILDS_MIN_CPU
 unset BUILDS_JOBS
 unset BUILDS_CHECKS
 
@@ -25,6 +26,9 @@ while [[ $# -gt 0 ]]; do
   '--minversion')
    if [[ -v BUILDS_MINVERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_MINVERSION="$2"; shift 2;;
+  '--min_cpu')
+   if [[ -v BUILDS_MIN_CPU ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_CPU="$2"; shift 2;;
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
@@ -70,6 +74,18 @@ if [[ -v BUILDS_MINVERSION ]]; then
   echo 'No minversion!' >&2; exit 1; fi
 else
  BUILDS_MINVERSION='14.0'
+fi
+
+if [[ -v BUILDS_MIN_CPU ]]; then
+ if [[ -z "${BUILDS_MIN_CPU}" ]]; then
+  echo 'No min cpu!' >&2; exit 1; fi
+ case "${BUILDS_MIN_CPU}" in
+  'm1'|'m2'|'m3'|'m4'|'m5');;
+  '') echo 'No min cpu!' >&2; exit 1;;
+  *) echo 'Wrong min cpu!' >&2; exit 1;;
+ esac
+else
+ BUILDS_MIN_CPU='m1'
 fi
 
 if [[ "${BUILDS_JOBS}" == 'max' ]]; then
@@ -176,7 +192,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
-  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
+  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MINVERSION}" \
   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
   ./configure --prefix='/usr/local')
@@ -212,7 +228,7 @@ if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} err
 
 #
 
-BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
+BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
 [[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
