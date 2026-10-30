@@ -77,8 +77,6 @@ else
 fi
 
 if [[ -v BUILDS_MIN_CPU ]]; then
- if [[ -z "${BUILDS_MIN_CPU}" ]]; then
-  echo 'No min cpu!' >&2; exit 1; fi
  case "${BUILDS_MIN_CPU}" in
   'm1'|'m2'|'m3'|'m4'|'m5');;
   '') echo 'No min cpu!' >&2; exit 1;;
