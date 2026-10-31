@@ -97,7 +97,7 @@ else
  BUILDS_MIN_MACOS='14'
 fi
 
-if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(.(0|[1-9][0-9]?)){0,2}$ ]]; then
+if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(\.(0|[1-9][0-9]?)){0,2}$ ]]; then
  echo 'Wrong min macos!' >&2; exit 1; fi
 
 for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
