@@ -141,9 +141,9 @@ elif [[ -L "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
 fi
 
-BUILDS_WORKDIR="$(realpath "${BUILDS_WORKDIR}")"
+BUILDS_WORKDIR="$(realpath -- "${BUILDS_WORKDIR}")"
 if [[ $? != 0 ]]; then
- echo "Realpath \"${BUILDS_WORKDIR}\" error!" >&2; exit 1
+ echo 'Realpath error!' >&2; exit 1
 elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
 elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
