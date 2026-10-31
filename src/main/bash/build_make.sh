@@ -131,12 +131,19 @@ if [[ -z "${BUILDS_VERSION}" ]]; then
  echo 'No version!' >&2; exit 1; fi
 
 if [[ ! -v BUILDS_WORKDIR ]]; then
- BUILDS_WORKDIR="$(pwd)"; fi
+ BUILDS_WORKDIR="$(pwd)"
+ if [[ $? != 0 ]]; then echo 'Get workdir error!' >&2; exit 1; fi
+fi
 
 if [[ -z "${BUILDS_WORKDIR}" ]]; then
  echo 'No workdir!' >&2; exit 1
 elif [[ -L "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
+fi
+
+BUILDS_WORKDIR="$(realpath "${BUILDS_WORKDIR}")"
+if [[ $? != 0 ]]; then
+ echo "Realpath \"${BUILDS_WORKDIR}\" error!" >&2; exit 1
 elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
 elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
