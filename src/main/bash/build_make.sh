@@ -64,9 +64,9 @@ if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
 
 if [[ "${BUILDS_MIN_CPU}" == 'current' ]]; then
- VALUE="$(/usr/sbin/sysctl -nx hw.cpufamily)"
+ BUILDS_MIN_CPU="$(/usr/sbin/sysctl -nx hw.cpufamily)"
  if [[ $? != 0 ]]; then echo 'Get cpu error!' >&2; exit 1; fi
- case "${VALUE}" in
+ case "${BUILDS_MIN_CPU}" in
   '0x1b588bb3') BUILDS_MIN_CPU='m1';;
   '0xda33d83d') BUILDS_MIN_CPU='m2';;
   '0xfa33415e'|'0x5f4dea93'|'0x72015832') BUILDS_MIN_CPU='m3';;
@@ -84,7 +84,10 @@ else
  BUILDS_MIN_CPU='m1'
 fi
 
-if [[ -v BUILDS_MIN_MACOS ]]; then
+if [[ "${BUILDS_MIN_MACOS}" == 'current' ]]; then
+ BUILDS_MIN_MACOS="$(/usr/bin/sw_vers -productVersion)"
+ if [[ $? != 0 ]]; then echo 'Get macos version error!' >&2; exit 1; fi
+elif [[ -v BUILDS_MIN_MACOS ]]; then
  case "${BUILDS_MIN_MACOS}" in
   '14'|'15'|'26'|'27');;
   '') echo 'No min macos!' >&2; exit 1;;
@@ -93,6 +96,9 @@ if [[ -v BUILDS_MIN_MACOS ]]; then
 else
  BUILDS_MIN_MACOS='14'
 fi
+
+if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(.(0|[1-9][0-9]?)){0,2}$ ]]; then
+ echo 'Wrong min macos!' >&2; exit 1; fi
 
 for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
  if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
