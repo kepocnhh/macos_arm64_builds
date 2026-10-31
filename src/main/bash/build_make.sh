@@ -52,7 +52,7 @@ else
 fi
 
 if [[ "${BUILDS_JOBS}" == 'max' ]]; then
- BUILDS_JOBS="$(sysctl -n hw.ncpu)"
+ BUILDS_JOBS="$(/usr/sbin/sysctl -n hw.ncpu)"
  if [[ $? != 0 ]]; then echo 'Get jobs error!' >&2; exit 1; fi
 elif [[ -v BUILDS_JOBS ]]; then
  if [[ -z "${BUILDS_JOBS}" ]]; then echo 'No jobs!' >&2; exit 1; fi
@@ -63,7 +63,18 @@ fi
 if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
  echo 'Wrong jobs!' >&2; exit 1; fi
 
-if [[ -v BUILDS_MIN_CPU ]]; then
+if [[ "${BUILDS_MIN_CPU}" == 'current' ]]; then
+ VALUE="$(/usr/sbin/sysctl -nx hw.cpufamily)"
+ if [[ $? != 0 ]]; then echo 'Get cpu error!' >&2; exit 1; fi
+ case "${VALUE}" in
+  '0x1b588bb3') BUILDS_MIN_CPU='m1';;
+  '0xda33d83d') BUILDS_MIN_CPU='m2';;
+  '0xfa33415e'|'0x5f4dea93'|'0x72015832') BUILDS_MIN_CPU='m3';;
+  '0x6f5129ac'|'0x17d5b93a') BUILDS_MIN_CPU='m4';;
+  '0x1d5a87e8'|'0xf76c5b1a') BUILDS_MIN_CPU='m5';;
+  *) echo 'Wrong cpu!' >&2; exit 1;;
+ esac
+elif [[ -v BUILDS_MIN_CPU ]]; then
  case "${BUILDS_MIN_CPU}" in
   'm1'|'m2'|'m3'|'m4'|'m5');;
   '') echo 'No min cpu!' >&2; exit 1;;
