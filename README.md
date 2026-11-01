@@ -47,6 +47,14 @@ git config --global credential.helper osxkeychain
 
 ---
 
+#### build [gzip](https://ftp.gnu.org/gnu/gzip/)
+
+```
+./src/main/bash/build_gzip.sh --jobs max --version "${GZIP_VERSION}" --public_key ./src/main/res/155d.gpg --checks true --min_cpu current --min_macos current
+```
+
+---
+
 #### build [make](https://ftp.gnu.org/gnu/make/)
 
 ```
