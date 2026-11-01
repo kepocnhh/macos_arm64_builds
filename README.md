@@ -45,6 +45,14 @@ git config --global credential.helper osxkeychain
 ./src/main/bash/build_gnupg.sh --version "${GNUPG_VERSION}" --jobs max --checks true --public_key ./src/main/res/ac8e.gpg --public_key ./src/main/res/6daa.gpg
 ```
 
+#### build [grep](https://ftp.gnu.org/gnu/grep/)
+
+```
+./src/main/bash/build_grep.sh --version "${GREP_VERSION}" --jobs max --checks true --public_key ./src/main/res/155d.gpg --checks true --min_cpu current --min_macos current
+```
+
+---
+
 ---
 
 #### build [gzip](https://ftp.gnu.org/gnu/gzip/)
