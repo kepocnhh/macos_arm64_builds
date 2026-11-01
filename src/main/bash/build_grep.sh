@@ -245,7 +245,9 @@ TIME_START="$(date +%s%3N)"
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
-  ./configure --prefix='/usr/local')
+  PCRE_CFLAGS='-I/usr/local/include' \
+  PCRE_LIBS='/usr/local/lib/libpcre2-8.a' \
+  ./configure --prefix='/usr/local' --enable-perl-regexp)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
