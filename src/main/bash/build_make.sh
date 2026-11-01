@@ -104,11 +104,16 @@ fi
 if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(\.(0|[1-9][0-9]?)){0,2}$ ]]; then
  echo 'Wrong min macos!' >&2; exit 1; fi
 
-for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
+for ((i = 0; i < ${#BUILDS_PUBLIC_KEYS[@]}; i+=1)); do
+ BUILDS_PUBLIC_KEY="${BUILDS_PUBLIC_KEYS[i]}"
  if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
   echo 'No public key!' >&2; exit 1
  elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
+ fi
+ BUILDS_PUBLIC_KEY="$(realpath -- "${BUILDS_PUBLIC_KEY}")"
+ if [[ $? != 0 ]]; then
+  echo 'Realpath public key error!' >&2; exit 1
  elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
  elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
@@ -116,6 +121,7 @@ for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
  elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
   echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
  fi
+ BUILDS_PUBLIC_KEYS[i]="${BUILDS_PUBLIC_KEY}"
 done
 
 #
