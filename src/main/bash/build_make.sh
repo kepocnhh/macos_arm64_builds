@@ -51,6 +51,8 @@ else
  BUILDS_CHECKS='false'
 fi
 
+#
+
 if [[ "${BUILDS_JOBS}" == 'max' ]]; then
  BUILDS_JOBS="$(/usr/sbin/sysctl -n hw.ncpu)"
  if [[ $? != 0 ]]; then echo 'Get jobs error!' >&2; exit 1; fi
@@ -84,6 +86,8 @@ else
  BUILDS_MIN_CPU='m1'
 fi
 
+#
+
 if [[ "${BUILDS_MIN_MACOS}" == 'current' ]]; then
  BUILDS_MIN_MACOS="$(/usr/bin/sw_vers -productVersion)"
  if [[ $? != 0 ]]; then echo 'Get macos version error!' >&2; exit 1; fi
@@ -114,21 +118,29 @@ for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
  fi
 done
 
+#
+
 if [[ ! -v BUILDS_SDK_ROOT ]]; then
  BUILDS_SDK_ROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
  if [[ $? != 0 ]]; then echo 'Get sdk root error!' >&2; exit 1; fi
 fi
 
-if [[ -z "${BUILDS_SDK_ROOT}" ]]; then
- echo 'No sdk root!' >&2; exit 1
+if [[ -z "${BUILDS_SDK_ROOT}" ]]; then echo 'No sdk root!' >&2; exit 1; fi
+
+BUILDS_SDK_ROOT="$(realpath -- "${BUILDS_SDK_ROOT}")"
+if [[ $? != 0 ]]; then
+ echo 'Realpath sdk root error!' >&2; exit 1
 elif [[ ! -e "${BUILDS_SDK_ROOT}" ]]; then
  echo "\"${BUILDS_SDK_ROOT}\" does not exist!" >&2; exit 1
 elif [[ ! -d "${BUILDS_SDK_ROOT}" ]]; then
  echo "\"${BUILDS_SDK_ROOT}\" is not a dir!" >&2; exit 1
 fi
 
-if [[ -z "${BUILDS_VERSION}" ]]; then
- echo 'No version!' >&2; exit 1; fi
+#
+
+if [[ -z "${BUILDS_VERSION}" ]]; then echo 'No version!' >&2; exit 1; fi
+
+#
 
 if [[ ! -v BUILDS_WORKDIR ]]; then
  BUILDS_WORKDIR="$(pwd)"
@@ -143,7 +155,7 @@ fi
 
 BUILDS_WORKDIR="$(realpath -- "${BUILDS_WORKDIR}")"
 if [[ $? != 0 ]]; then
- echo 'Realpath error!' >&2; exit 1
+ echo 'Realpath workdir error!' >&2; exit 1
 elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
  echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
 elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
