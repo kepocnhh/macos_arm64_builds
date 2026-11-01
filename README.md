@@ -6,7 +6,7 @@ macos arm64 builds
 #### build [bash](https://ftp.gnu.org/gnu/bash/)
 
 ```
-./src/main/bash/build_bash.sh --jobs max --version "${BASH_VERSION}" --public_key ./src/main/res/7c01.gpg
+./src/main/bash/build_bash.sh --jobs max --version "${BASH_VERSION}" --public_key ./src/main/res/7c01.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ---
