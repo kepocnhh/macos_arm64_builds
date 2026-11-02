@@ -282,7 +282,6 @@ if [[ $? != 0 ]]; then echo "Untar openssl-${BUILDS_OPENSSL_VERSION} error!" >&2
 rm "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz"
 
 rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
-mkdir -p "${BUILDS_WORKDIR}/sources/"
 tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
 if [[ $? != 0 ]]; then echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
@@ -296,8 +295,6 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 #
 
 TIME_START="$(date +%s%3N)"
-rm -rf "${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
-mkdir -p "${BUILDS_WORKDIR}/bin/"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
  && CC='/usr/bin/clang' \
   CXX='/usr/bin/clang++' \
@@ -334,7 +331,6 @@ if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >
 #
 
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
-mkdir -p "${BUILDS_WORKDIR}/bin/"
 
 #
 
