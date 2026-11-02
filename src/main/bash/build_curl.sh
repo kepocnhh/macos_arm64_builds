@@ -317,7 +317,7 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
-if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
+if [[ "${BUILDS_CHECKS}" == 'x' ]]; then
  TIME_START="$(date +%s%3N)"
  (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make test "-j${BUILDS_JOBS}")
  if [[ $? != 0 ]]; then echo "Test openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
@@ -326,7 +326,6 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
   >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 fi
 
-echo 'Not implemented!' >&2; exit 1 # todo
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
  && make "DESTDIR=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" install_sw)
 if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
@@ -379,7 +378,7 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
 fi
 
 #
-
+echo 'Not implemented!' >&2; exit 1 # todo
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
