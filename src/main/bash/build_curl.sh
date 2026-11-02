@@ -317,7 +317,7 @@ TIME_NOW="$(date +%s%3N)"
 echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
-if [[ "${BUILDS_CHECKS}" == 'x' ]]; then
+if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
  (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make test "-j${BUILDS_JOBS}")
  if [[ $? != 0 ]]; then echo "Test openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
@@ -400,7 +400,7 @@ rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.g
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
