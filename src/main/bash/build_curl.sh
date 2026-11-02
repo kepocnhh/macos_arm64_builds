@@ -319,7 +319,8 @@ echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))
 
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
- (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make test "-j${BUILDS_JOBS}")
+ (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
+  && HARNESS_JOBS="${BUILDS_JOBS}" make test "-j${BUILDS_JOBS}")
  if [[ $? != 0 ]]; then echo "Test openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Test openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
@@ -371,7 +372,7 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
-  && make check "-j${BUILDS_JOBS}")
+  && make check "-j${BUILDS_JOBS}" "TFLAGS=-j${BUILDS_JOBS}")
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
