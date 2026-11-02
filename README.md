@@ -22,7 +22,7 @@ macos arm64 builds
 #### build [curl](https://curl.se/download/)
 
 ```
-./src/main/bash/build_curl.sh --jobs max --version "${CURL_VERSION}" --public_key ./src/main/res/27ed.gpg --openssl_version "${OPENSSL_VERSION}" --public_key ./src/main/res/c46e.gpg --apple_sectrust true
+./src/main/bash/build_curl.sh --jobs max --version "${CURL_VERSION}" --public_key ./src/main/res/27ed.gpg --openssl_version "${OPENSSL_VERSION}" --public_key ./src/main/res/c46e.gpg --apple_sectrust true --checks true --min_cpu current --min_macos current
 ```
 
 ---
