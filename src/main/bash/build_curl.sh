@@ -274,7 +274,7 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 rm -rf "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
 tar -xf "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
@@ -291,7 +291,7 @@ rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
 
 rm -rf "${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
-:> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
+:> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
 
@@ -301,28 +301,28 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
  && CC='/usr/bin/clang' \
   CXX='/usr/bin/clang++' \
-  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
-  CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
-  LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
+  CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
+  CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
+  LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   ./Configure darwin64-arm64 --prefix='/usr/local' --openssldir='/dev/null' no-shared no-module)
 if [[ $? != 0 ]]; then echo "Configure openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
- >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
+ >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" && make "-j${BUILDS_JOBS}")
 if [[ $? != 0 ]]; then echo "Make openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Make openssl-${BUILDS_OPENSSL_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
- >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-j${BUILDS_JOBS}.log"
+ >> "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/" \
  && make "DESTDIR=${BUILDS_WORKDIR}/bin/openssl-${BUILDS_OPENSSL_VERSION}/" install_sw)
 if [[ $? != 0 ]]; then echo "Install openssl-${BUILDS_OPENSSL_VERSION} error!" >&2; exit 1; fi
 
 #
-
+echo 'Not implemented!' >&2; exit 1 # todo
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
 :> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
