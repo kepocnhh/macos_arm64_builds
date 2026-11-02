@@ -1,120 +1,53 @@
 #!/usr/local/bin/bash
 
+unset BUILDS_APPLE_SECTRUST
+unset BUILDS_CHECKS
+unset BUILDS_JOBS
+unset BUILDS_MIN_CPU
+unset BUILDS_MIN_MACOS
+unset BUILDS_OPENSSL_VERSION
 unset BUILDS_PUBLIC_KEYS
+unset BUILDS_SDK_ROOT
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
-unset BUILDS_SDKROOT
-unset BUILDS_MINVERSION
-unset BUILDS_JOBS
-unset BUILDS_OPENSSL_VERSION
-unset BUILDS_APPLE_SECTRUST
 
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
  case "$1" in
+  '--apple_sectrust')
+   if [[ -v BUILDS_APPLE_SECTRUST ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_APPLE_SECTRUST="$2"; shift 2;;
+  '--checks')
+   if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_CHECKS="$2"; shift 2;;
+  '--jobs')
+   if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_JOBS="$2"; shift 2;;
+  '--min_cpu')
+   if [[ -v BUILDS_MIN_CPU ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_CPU="$2"; shift 2;;
+  '--min_macos')
+   if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_MIN_MACOS="$2"; shift 2;;
+  '--openssl_version')
+   if [[ -v BUILDS_OPENSSL_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_OPENSSL_VERSION="$2"; shift 2;;
   '--public_key')
    BUILDS_PUBLIC_KEYS+=("$2"); shift 2;;
+  '--sdk_root')
+   if [[ -v BUILDS_SDK_ROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_SDK_ROOT="$2"; shift 2;;
   '--version')
    if [[ -v BUILDS_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_VERSION="$2"; shift 2;;
   '--workdir')
    if [[ -v BUILDS_WORKDIR ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_WORKDIR="$2"; shift 2;;
-  '--sdkroot')
-   if [[ -v BUILDS_SDKROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_SDKROOT="$2"; shift 2;;
-  '--minversion')
-   if [[ -v BUILDS_MINVERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_MINVERSION="$2"; shift 2;;
-  '--jobs')
-   if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_JOBS="$2"; shift 2;;
-  '--openssl_version')
-   if [[ -v BUILDS_OPENSSL_VERSION ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_OPENSSL_VERSION="$2"; shift 2;;
-  '--apple_sectrust')
-   if [[ -v BUILDS_APPLE_SECTRUST ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
-   BUILDS_APPLE_SECTRUST="$2"; shift 2;;
   *) echo "\"$1\" is not supported!" >&2; exit 1;;
  esac
 done
 
-for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do
- if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo 'No public key!' >&2; exit 1
- elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
- elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
- elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is not a file!" >&2; exit 1
- elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
- fi
-done
-
-if [[ -z "${BUILDS_VERSION}" ]]; then
- echo 'No version!' >&2; exit 1; fi
-
-if [[ ! -v BUILDS_WORKDIR ]]; then
- BUILDS_WORKDIR="$(pwd)"; fi
-
-if [[ -z "${BUILDS_WORKDIR}" ]]; then
- echo 'No workdir!' >&2; exit 1
-elif [[ -L "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
-elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
-elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
- echo "\"${BUILDS_WORKDIR}\" is not a dir!" >&2; exit 1
-fi
-
-if [[ -v BUILDS_MINVERSION ]]; then
- if [[ -z "${BUILDS_MINVERSION}" ]]; then
-  echo 'No minversion!' >&2; exit 1; fi
-else
- BUILDS_MINVERSION='14.0'
-fi
-
-if [[ "${BUILDS_JOBS}" == 'max' ]]; then
- BUILDS_JOBS="$(sysctl -n hw.ncpu)"
- if [[ $? != 0 ]]; then
-  echo 'Get jobs error!' >&2; exit 1; fi
-elif [[ -v BUILDS_JOBS ]]; then
- if [[ -z "${BUILDS_JOBS}" ]]; then
-  echo 'No jobs!' >&2; exit 1; fi
-else
- BUILDS_JOBS=1
-fi
-
-if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
- echo 'Wrong jobs!' >&2; exit 1; fi
-
-BUILDS_SUBJECT='curl'
-BUILDS_ARCH='arm64'
-
 #
-
-if [[ ! -v BUILDS_SDKROOT ]]; then
- BUILDS_SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
- if [[ $? != 0 ]]; then
-  echo 'Get sdk root error!' >&2; exit 1; fi
-fi
-
-if [[ -z "${BUILDS_SDKROOT}" ]]; then
- echo 'No sdk root!' >&2; exit 1
-elif [[ ! -e "${BUILDS_SDKROOT}" ]]; then
- echo "\"${BUILDS_SDKROOT}\" does not exist!" >&2; exit 1
-elif [[ ! -d "${BUILDS_SDKROOT}" ]]; then
- echo "\"${BUILDS_SDKROOT}\" is not a dir!" >&2; exit 1
-fi
-
-if [[ -v BUILDS_OPENSSL_VERSION ]]; then
- if [[ -z "${BUILDS_OPENSSL_VERSION}" ]]; then
-  echo 'No openssl version!' >&2; exit 1; fi
-else
- BUILDS_OPENSSL_VERSION='3.6.5'
-fi
 
 if [[ -v BUILDS_APPLE_SECTRUST ]]; then
  case "${BUILDS_APPLE_SECTRUST}" in
@@ -125,6 +58,154 @@ if [[ -v BUILDS_APPLE_SECTRUST ]]; then
 else
  BUILDS_APPLE_SECTRUST='false'
 fi
+
+#
+
+if [[ -v BUILDS_CHECKS ]]; then
+ case "${BUILDS_CHECKS}" in
+  'false'|'true');;
+  '') echo 'No checks!' >&2; exit 1;;
+  *) echo 'Wrong checks!' >&2; exit 1;;
+ esac
+else
+ BUILDS_CHECKS='false'
+fi
+
+#
+
+if [[ "${BUILDS_JOBS}" == 'max' ]]; then
+ BUILDS_JOBS="$(/usr/sbin/sysctl -n hw.ncpu)"
+ if [[ $? != 0 ]]; then echo 'Get jobs error!' >&2; exit 1; fi
+elif [[ -v BUILDS_JOBS ]]; then
+ if [[ -z "${BUILDS_JOBS}" ]]; then echo 'No jobs!' >&2; exit 1; fi
+else
+ BUILDS_JOBS=1
+fi
+
+if [[ ! "${BUILDS_JOBS}" =~ ^[1-9][0-9]?$ ]]; then
+ echo 'Wrong jobs!' >&2; exit 1; fi
+
+#
+
+if [[ "${BUILDS_MIN_CPU}" == 'current' ]]; then
+ BUILDS_MIN_CPU="$(/usr/sbin/sysctl -nx hw.cpufamily)"
+ if [[ $? != 0 ]]; then echo 'Get cpu error!' >&2; exit 1; fi
+ case "${BUILDS_MIN_CPU}" in
+  '0x1b588bb3') BUILDS_MIN_CPU='m1';;
+  '0xda33d83d') BUILDS_MIN_CPU='m2';;
+  '0xfa33415e'|'0x5f4dea93'|'0x72015832') BUILDS_MIN_CPU='m3';;
+  '0x6f5129ac'|'0x17d5b93a') BUILDS_MIN_CPU='m4';;
+  '0x1d5a87e8'|'0xf76c5b1a') BUILDS_MIN_CPU='m5';;
+  *) echo 'Wrong cpu!' >&2; exit 1;;
+ esac
+elif [[ -v BUILDS_MIN_CPU ]]; then
+ case "${BUILDS_MIN_CPU}" in
+  'm1'|'m2'|'m3'|'m4'|'m5');;
+  '') echo 'No min cpu!' >&2; exit 1;;
+  *) echo 'Wrong min cpu!' >&2; exit 1;;
+ esac
+else
+ BUILDS_MIN_CPU='m1'
+fi
+
+#
+
+if [[ "${BUILDS_MIN_MACOS}" == 'current' ]]; then
+ BUILDS_MIN_MACOS="$(/usr/bin/sw_vers -productVersion)"
+ if [[ $? != 0 ]]; then echo 'Get macos version error!' >&2; exit 1; fi
+elif [[ -v BUILDS_MIN_MACOS ]]; then
+ case "${BUILDS_MIN_MACOS}" in
+  '14'|'15'|'26'|'27');;
+  '') echo 'No min macos!' >&2; exit 1;;
+  *) echo 'Wrong min macos!' >&2; exit 1;;
+ esac
+else
+ BUILDS_MIN_MACOS='14'
+fi
+
+if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(\.(0|[1-9][0-9]?)){0,2}$ ]]; then
+ echo 'Wrong min macos!' >&2; exit 1; fi
+
+#
+
+if [[ -v BUILDS_OPENSSL_VERSION ]]; then
+ if [[ -z "${BUILDS_OPENSSL_VERSION}" ]]; then
+  echo 'No openssl version!' >&2; exit 1; fi
+else
+ BUILDS_OPENSSL_VERSION='3.6.5'
+fi
+
+#
+
+for ((i = 0; i < ${#BUILDS_PUBLIC_KEYS[@]}; i+=1)); do
+ BUILDS_PUBLIC_KEY="${BUILDS_PUBLIC_KEYS[i]}"
+ if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo 'No public key!' >&2; exit 1
+ elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
+ fi
+ BUILDS_PUBLIC_KEY="$(realpath -- "${BUILDS_PUBLIC_KEY}")"
+ if [[ $? != 0 ]]; then
+  echo 'Realpath public key error!' >&2; exit 1
+ elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
+ elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is not a file!" >&2; exit 1
+ elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
+  echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
+ fi
+ BUILDS_PUBLIC_KEYS[i]="${BUILDS_PUBLIC_KEY}"
+done
+
+#
+
+if [[ ! -v BUILDS_SDK_ROOT ]]; then
+ BUILDS_SDK_ROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+ if [[ $? != 0 ]]; then echo 'Get sdk root error!' >&2; exit 1; fi
+fi
+
+if [[ -z "${BUILDS_SDK_ROOT}" ]]; then echo 'No sdk root!' >&2; exit 1; fi
+
+BUILDS_SDK_ROOT="$(realpath -- "${BUILDS_SDK_ROOT}")"
+if [[ $? != 0 ]]; then
+ echo 'Realpath sdk root error!' >&2; exit 1
+elif [[ ! -e "${BUILDS_SDK_ROOT}" ]]; then
+ echo "\"${BUILDS_SDK_ROOT}\" does not exist!" >&2; exit 1
+elif [[ ! -d "${BUILDS_SDK_ROOT}" ]]; then
+ echo "\"${BUILDS_SDK_ROOT}\" is not a dir!" >&2; exit 1
+fi
+
+#
+
+if [[ -z "${BUILDS_VERSION}" ]]; then echo 'No version!' >&2; exit 1; fi
+
+#
+
+if [[ ! -v BUILDS_WORKDIR ]]; then
+ BUILDS_WORKDIR="$(pwd)"
+ if [[ $? != 0 ]]; then echo 'Get workdir error!' >&2; exit 1; fi
+fi
+
+if [[ -z "${BUILDS_WORKDIR}" ]]; then
+ echo 'No workdir!' >&2; exit 1
+elif [[ -L "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" is a symlink!" >&2; exit 1
+fi
+
+BUILDS_WORKDIR="$(realpath -- "${BUILDS_WORKDIR}")"
+if [[ $? != 0 ]]; then
+ echo 'Realpath workdir error!' >&2; exit 1
+elif [[ ! -e "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" does not exist!" >&2; exit 1
+elif [[ ! -d "${BUILDS_WORKDIR}" ]]; then
+ echo "\"${BUILDS_WORKDIR}\" is not a dir!" >&2; exit 1
+fi
+
+#
+
+BUILDS_SUBJECT='curl'
+BUILDS_ARCH='arm64'
+BUILDS_SUFFIX="macos-${BUILDS_MIN_MACOS}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
 
 #
 
