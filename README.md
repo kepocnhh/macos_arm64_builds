@@ -14,7 +14,7 @@ macos arm64 builds
 #### build [coreutils](https://ftp.gnu.org/gnu/coreutils/)
 
 ```
-./src/main/bash/build_coreutils.sh --jobs max --version "${COREUTILS_VERSION}" --public_key ./src/main/res/6c37.gpg
+./src/main/bash/build_coreutils.sh --jobs max --version "${COREUTILS_VERSION}" --public_key ./src/main/res/6c37.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ---
