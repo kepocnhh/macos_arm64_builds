@@ -274,7 +274,7 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
 fi
 
 #
-
+echo 'Not implemented!' >&2; exit 1 # todo
 rm -rf "${BUILDS_WORKDIR}/sources/openssl-${BUILDS_OPENSSL_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
 tar -xf "${BUILDS_WORKDIR}/openssl-${BUILDS_OPENSSL_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
