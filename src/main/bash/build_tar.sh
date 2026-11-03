@@ -249,7 +249,8 @@ echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) /
 #
 
 TIME_START="$(date +%s%3N)"
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" && make "-j${BUILDS_JOBS}")
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && MAKEFLAGS='' make "-j${BUILDS_JOBS}")
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
@@ -260,7 +261,7 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
-  && make check "-j${BUILDS_JOBS}" "TESTSUITEFLAGS=-j${BUILDS_JOBS} -k !time01") # todo
+  && MAKEFLAGS='' make check "-j${BUILDS_JOBS}" "TESTSUITEFLAGS=-j${BUILDS_JOBS} -k !time01") # todo
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
@@ -270,7 +271,7 @@ fi
 #
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
- && make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
+ && MAKEFLAGS='' make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
