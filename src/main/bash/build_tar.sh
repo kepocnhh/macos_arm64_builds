@@ -268,11 +268,13 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
+#
+echo 'Not implemented!' >&2; exit 1 # todo
 "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${BUILDS_SUBJECT}" --version
 if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
