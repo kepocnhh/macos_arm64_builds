@@ -90,7 +90,7 @@ git config --global credential.helper osxkeychain
 #### build [tar](https://ftp.gnu.org/gnu/tar/)
 
 ```
-./src/main/bash/build_tar.sh --jobs max --version "${TAR_VERSION}" --public_key ./src/main/res/325f.gpg
+./src/main/bash/build_tar.sh --jobs max --version "${TAR_VERSION}" --public_key ./src/main/res/325f.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ---
