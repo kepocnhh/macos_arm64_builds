@@ -274,20 +274,19 @@ fi
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-"${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${BUILDS_SUBJECT}" --version
-if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+(set -x; cd "${BUILDS_WORKDIR}" \
+ && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${BUILDS_SUBJECT}" --version)
+if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
+
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
+[[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
-
 (set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local" \
- && "bin/${BUILDS_SUBJECT}" -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" "bin/${BUILDS_SUBJECT}")
-
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" "bin/${BUILDS_SUBJECT}")
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
