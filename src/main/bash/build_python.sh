@@ -304,14 +304,9 @@ fi
 #
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/" \
- && MAKEFLAGS='' GNUMAKEFLAGS='' make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install "COMPILEALL_OPTS=-j${BUILDS_JOBS}")
+ && MAKEFLAGS='' GNUMAKEFLAGS='' make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+  "COMPILEALL_OPTS=-j${BUILDS_JOBS}" altbininstall libinstall sharedinstall)
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
-
-#
-echo 'Not implemented!' >&2; exit 1 # todo
-(set -x; cd "${BUILDS_WORKDIR}" \
- && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${BUILDS_SUBJECT}" --version)
-if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
 echo 'Not implemented!' >&2; exit 1 # todo
