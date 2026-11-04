@@ -4,7 +4,7 @@ unset BUILDS_CHECKS
 unset BUILDS_JOBS
 unset BUILDS_MIN_CPU
 unset BUILDS_MIN_MACOS
-unset BUILDS_PUBLIC_KEYS
+unset BUILDS_CERTIFICATES
 unset BUILDS_SDK_ROOT
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
@@ -24,8 +24,8 @@ while [[ $# -gt 0 ]]; do
   '--min_macos')
    if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_MIN_MACOS="$2"; shift 2;;
-  '--public_key')
-   BUILDS_PUBLIC_KEYS+=("$2"); shift 2;;
+  '--certificate')
+   BUILDS_CERTIFICATES+=("$2"); shift 2;;
   '--sdk_root')
    if [[ -v BUILDS_SDK_ROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_SDK_ROOT="$2"; shift 2;;
@@ -108,24 +108,24 @@ if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(\.(0|[1-9][0-9]?)){0,2}$ ]]; then
 
 #
 
-for ((i = 0; i < ${#BUILDS_PUBLIC_KEYS[@]}; i+=1)); do
- BUILDS_PUBLIC_KEY="${BUILDS_PUBLIC_KEYS[i]}"
- if [[ -z "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo 'No public key!' >&2; exit 1
- elif [[ -L "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is a symlink!" >&2; exit 1
+for ((i = 0; i < ${#BUILDS_CERTIFICATES[@]}; i+=1)); do
+ BUILDS_CERTIFICATE="${BUILDS_CERTIFICATES[i]}"
+ if [[ -z "${BUILDS_CERTIFICATE}" ]]; then
+  echo 'No certificate!' >&2; exit 1
+ elif [[ -L "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is a symlink!" >&2; exit 1
  fi
- BUILDS_PUBLIC_KEY="$(realpath -- "${BUILDS_PUBLIC_KEY}")"
+ BUILDS_CERTIFICATE="$(realpath -- "${BUILDS_CERTIFICATE}")"
  if [[ $? != 0 ]]; then
-  echo 'Realpath public key error!' >&2; exit 1
- elif [[ ! -e "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" does not exist!" >&2; exit 1
- elif [[ ! -f "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is not a file!" >&2; exit 1
- elif [[ ! -s "${BUILDS_PUBLIC_KEY}" ]]; then
-  echo "\"${BUILDS_PUBLIC_KEY}\" is empty!" >&2; exit 1
+  echo 'Realpath certificate error!' >&2; exit 1
+ elif [[ ! -e "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" does not exist!" >&2; exit 1
+ elif [[ ! -f "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is not a file!" >&2; exit 1
+ elif [[ ! -s "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is empty!" >&2; exit 1
  fi
- BUILDS_PUBLIC_KEYS[i]="${BUILDS_PUBLIC_KEY}"
+ BUILDS_CERTIFICATES[i]="${BUILDS_CERTIFICATE}"
 done
 
 #
@@ -192,26 +192,37 @@ elif [[ "${HTTP_CODE}" != '200' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
+
+if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
-  -L --url "https://github.com/tukaani-project/${BUILDS_SUBJECT}/releases/download/v${BUILDS_VERSION}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz.sig" \
+  -L --url "https://${BUILDS_SUBJECT}.org/ftp/${BUILDS_SUBJECT}/${BUILDS_VERSION}/${BUILDS_SUBJECT^}-${BUILDS_VERSION}.tgz.crt" \
   -o "${BUILDS_WORKDIR}/${SUBJECT}")
  if [[ $? -ne 0 ]]; then
   echo "Request \"${SUBJECT}\" error!" >&2; exit 1
  elif [[ "${HTTP_CODE}" != '200' ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
- GPG_HOMEDIR="$(mktemp -d)"
- GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
- for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
- GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
- gpg "${GPG_ARGS[@]}"
- if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+ #
+ OPENSSL_ARGS=()
+ for BUILDS_CERTIFICATE in "${BUILDS_CERTIFICATES[@]}"; do OPENSSL_ARGS+=('-trusted' "${BUILDS_CERTIFICATE}"); done
+ openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -x509_strict "${BUILDS_WORKDIR}/${SUBJECT}"
+ if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
+ #
+ echo 'Not implemented!' >&2; exit 1 # todo
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
- rm -rf "${GPG_HOMEDIR}"
+ HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
+  -L --url "https://${BUILDS_SUBJECT}.org/ftp/${BUILDS_SUBJECT}/${BUILDS_VERSION}/${BUILDS_SUBJECT^}-${BUILDS_VERSION}.tgz.sig" \
+  -o "${BUILDS_WORKDIR}/${SUBJECT}")
+ if [[ $? -ne 0 ]]; then
+  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
+ elif [[ "${HTTP_CODE}" != '200' ]]; then
+  echo "Response \"${SUBJECT}\" error!" >&2; exit 1
+ fi
+ #
+ echo 'Not implemented!' >&2; exit 1 # todo
 fi
 
 #
