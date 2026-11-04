@@ -223,9 +223,9 @@ if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
  #
  openssl dgst -sha256 \
   -verify <(openssl x509 -in "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt" -pubkey -noout) \
-  -signature <(openssl base64 -d -in "${SUBJECT}") "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
+  -signature <(openssl base64 -d -in "${BUILDS_WORKDIR}/${SUBJECT}") "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
  if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
- rm "${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt"
+ rm "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt"
 fi
 
 #
