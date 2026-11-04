@@ -179,14 +179,12 @@ BUILDS_ARCH='arm64'
 BUILDS_SUFFIX="macos-${BUILDS_MIN_MACOS}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
 rm "${BUILDS_WORKDIR}/${SUBJECT}"
-
 HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
  -L --url "https://github.com/tukaani-project/${BUILDS_SUBJECT}/releases/download/v${BUILDS_VERSION}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz" \
  -o "${BUILDS_WORKDIR}/${SUBJECT}")
-
 if [[ $? -ne 0 ]]; then
  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
 elif [[ "${HTTP_CODE}" != '200' ]]; then
