@@ -98,7 +98,7 @@ git config --global credential.helper osxkeychain
 #### build [xz](https://github.com/tukaani-project/xz/releases/)
 
 ```
-./src/main/bash/build_xz.sh --jobs max --version "${XZ_VERSION}" --public_key ./src/main/res/3690.gpg
+./src/main/bash/build_xz.sh --jobs max --version "${XZ_VERSION}" --public_key ./src/main/res/3690.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ---
