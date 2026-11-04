@@ -289,11 +289,12 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
- (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
-  && MAKEFLAGS='' GNUMAKEFLAGS='' make check "-j${BUILDS_JOBS}")
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/" \
+  && MAKEFLAGS='' GNUMAKEFLAGS='' PATH='/usr/bin:/bin:/usr/sbin:/sbin' make test "-j${BUILDS_JOBS}" \
+   "TESTOPTS=-j${BUILDS_JOBS} -x test_pydoc test_httpservers test_robotparser test_urllib2 test_urllib2_localnet test_urllib2net -i test.test_urllibnet.urlopenNetworkTests.test_bad_address") # todo
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
