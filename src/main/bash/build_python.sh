@@ -279,9 +279,9 @@ echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) /
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 TIME_START="$(date +%s%3N)"
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/" \
  && MAKEFLAGS='' GNUMAKEFLAGS='' make "-j${BUILDS_JOBS}")
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
