@@ -223,7 +223,7 @@ if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
  #
  OPENSSL_ARGS=()
  for BUILDS_CERTIFICATE in "${BUILDS_CERTIFICATES[@]}"; do OPENSSL_ARGS+=('-trusted' "${BUILDS_CERTIFICATE}"); done
- openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -verify_email "${BUILDS_EMAIL}" -x509_strict "${BUILDS_WORKDIR}/${SUBJECT}"
+ openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -verify_email "${BUILDS_EMAIL}" -x509_strict -purpose codesign "${BUILDS_WORKDIR}/${SUBJECT}"
  if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
  #
  SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
