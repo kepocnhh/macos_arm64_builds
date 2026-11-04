@@ -87,6 +87,14 @@ git config --global credential.helper osxkeychain
 
 ---
 
+#### build [python](https://python.org/ftp/python/)
+
+```
+./src/main/bash/build_python.sh --jobs max --version "${PYTHON_VERSION}" --checks true --certificate ./src/main/res/fulcio.pem --email hugo@python.org --min_cpu current --min_macos current
+```
+
+---
+
 #### build [tar](https://ftp.gnu.org/gnu/tar/)
 
 ```
