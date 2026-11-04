@@ -210,7 +210,6 @@ if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
  openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -x509_strict "${BUILDS_WORKDIR}/${SUBJECT}"
  if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
  #
- echo 'Not implemented!' >&2; exit 1 # todo
  SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
@@ -222,7 +221,11 @@ if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
  #
- echo 'Not implemented!' >&2; exit 1 # todo
+ openssl dgst -sha256 \
+  -verify <(openssl x509 -in "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt" -pubkey -noout) \
+  -signature <(openssl base64 -d -in "${SUBJECT}") "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
+ if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
+ rm "${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.crt"
 fi
 
 #
