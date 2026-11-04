@@ -309,16 +309,16 @@ fi
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-[[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
+
+[[ "${#BUILDS_CERTIFICATES[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
 [[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 (set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/" \
- && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" './bin')
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" '.')
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+
+rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/"
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
