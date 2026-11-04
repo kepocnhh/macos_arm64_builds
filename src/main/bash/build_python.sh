@@ -246,7 +246,7 @@ fi
 
 #
 
-rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
+rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
 
 #
@@ -262,15 +262,17 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 :> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 TIME_START="$(date +%s%3N)"
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT^}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
-  ./configure --prefix='/usr/local' --disable-shared --enable-static)
+  MACOSX_DEPLOYMENT_TARGET="${BUILDS_MIN_MACOS}" \
+  SDKROOT="${BUILDS_SDK_ROOT}" \
+  ./configure --prefix='/usr/local' --disable-shared --disable-framework --with-pkg-config=no)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
