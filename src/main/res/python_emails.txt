@@ -1,0 +1,11 @@
+3.7 nad@python.org
+3.8 lukasz@langa.pl
+3.9 lukasz@langa.pl
+3.10 pablogsal@python.org
+3.11 pablogsal@python.org
+3.12 thomas@python.org
+3.13 thomas@python.org
+3.14 hugo@python.org
+3.15 hugo@python.org
+3.16 savannah@python.org
+3.17 savannah@python.org

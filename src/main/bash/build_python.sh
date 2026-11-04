@@ -1,10 +1,11 @@
 #!/usr/local/bin/bash
 
+unset BUILDS_CERTIFICATES
 unset BUILDS_CHECKS
+unset BUILDS_EMAIL
 unset BUILDS_JOBS
 unset BUILDS_MIN_CPU
 unset BUILDS_MIN_MACOS
-unset BUILDS_CERTIFICATES
 unset BUILDS_SDK_ROOT
 unset BUILDS_VERSION
 unset BUILDS_WORKDIR
@@ -12,9 +13,14 @@ unset BUILDS_WORKDIR
 while [[ $# -gt 0 ]]; do
  if [[ $# -lt 2 ]]; then echo 'Wrong flags!' >&2; exit 1; fi
  case "$1" in
+  '--certificate')
+   BUILDS_CERTIFICATES+=("$2"); shift 2;;
   '--checks')
    if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_CHECKS="$2"; shift 2;;
+  '--email')
+   if [[ -v BUILDS_EMAIL ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_EMAIL="$2"; shift 2;;
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
@@ -24,8 +30,6 @@ while [[ $# -gt 0 ]]; do
   '--min_macos')
    if [[ -v BUILDS_MIN_MACOS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_MIN_MACOS="$2"; shift 2;;
-  '--certificate')
-   BUILDS_CERTIFICATES+=("$2"); shift 2;;
   '--sdk_root')
    if [[ -v BUILDS_SDK_ROOT ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_SDK_ROOT="$2"; shift 2;;
@@ -41,6 +45,28 @@ done
 
 #
 
+for ((i = 0; i < ${#BUILDS_CERTIFICATES[@]}; i+=1)); do
+ BUILDS_CERTIFICATE="${BUILDS_CERTIFICATES[i]}"
+ if [[ -z "${BUILDS_CERTIFICATE}" ]]; then
+  echo 'No certificate!' >&2; exit 1
+ elif [[ -L "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is a symlink!" >&2; exit 1
+ fi
+ BUILDS_CERTIFICATE="$(realpath -- "${BUILDS_CERTIFICATE}")"
+ if [[ $? != 0 ]]; then
+  echo 'Realpath certificate error!' >&2; exit 1
+ elif [[ ! -e "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" does not exist!" >&2; exit 1
+ elif [[ ! -f "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is not a file!" >&2; exit 1
+ elif [[ ! -s "${BUILDS_CERTIFICATE}" ]]; then
+  echo "\"${BUILDS_CERTIFICATE}\" is empty!" >&2; exit 1
+ fi
+ BUILDS_CERTIFICATES[i]="${BUILDS_CERTIFICATE}"
+done
+
+#
+
 if [[ -v BUILDS_CHECKS ]]; then
  case "${BUILDS_CHECKS}" in
   'false'|'true');;
@@ -49,6 +75,18 @@ if [[ -v BUILDS_CHECKS ]]; then
  esac
 else
  BUILDS_CHECKS='false'
+fi
+
+#
+
+if [[ -v BUILDS_EMAIL ]]; then
+ if [[ -z "${BUILDS_EMAIL}" ]]; then
+  echo 'No email!' >&2; exit 1
+ elif [[ "${#BUILDS_CERTIFICATES[@]}" -eq 0 ]]; then
+  echo 'No certificates!' >&2; exit 1
+ fi
+elif [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
+ echo 'No email!' >&2; exit 1
 fi
 
 #
@@ -105,28 +143,6 @@ fi
 
 if [[ ! "${BUILDS_MIN_MACOS}" =~ ^[1-9][0-9]?(\.(0|[1-9][0-9]?)){0,2}$ ]]; then
  echo 'Wrong min macos!' >&2; exit 1; fi
-
-#
-
-for ((i = 0; i < ${#BUILDS_CERTIFICATES[@]}; i+=1)); do
- BUILDS_CERTIFICATE="${BUILDS_CERTIFICATES[i]}"
- if [[ -z "${BUILDS_CERTIFICATE}" ]]; then
-  echo 'No certificate!' >&2; exit 1
- elif [[ -L "${BUILDS_CERTIFICATE}" ]]; then
-  echo "\"${BUILDS_CERTIFICATE}\" is a symlink!" >&2; exit 1
- fi
- BUILDS_CERTIFICATE="$(realpath -- "${BUILDS_CERTIFICATE}")"
- if [[ $? != 0 ]]; then
-  echo 'Realpath certificate error!' >&2; exit 1
- elif [[ ! -e "${BUILDS_CERTIFICATE}" ]]; then
-  echo "\"${BUILDS_CERTIFICATE}\" does not exist!" >&2; exit 1
- elif [[ ! -f "${BUILDS_CERTIFICATE}" ]]; then
-  echo "\"${BUILDS_CERTIFICATE}\" is not a file!" >&2; exit 1
- elif [[ ! -s "${BUILDS_CERTIFICATE}" ]]; then
-  echo "\"${BUILDS_CERTIFICATE}\" is empty!" >&2; exit 1
- fi
- BUILDS_CERTIFICATES[i]="${BUILDS_CERTIFICATE}"
-done
 
 #
 
@@ -207,7 +223,7 @@ if [[ "${#BUILDS_CERTIFICATES[@]}" -gt 0 ]]; then
  #
  OPENSSL_ARGS=()
  for BUILDS_CERTIFICATE in "${BUILDS_CERTIFICATES[@]}"; do OPENSSL_ARGS+=('-trusted' "${BUILDS_CERTIFICATE}"); done
- openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -x509_strict "${BUILDS_WORKDIR}/${SUBJECT}"
+ openssl verify "${OPENSSL_ARGS[@]}" -no_check_time -verify_email "${BUILDS_EMAIL}" -x509_strict "${BUILDS_WORKDIR}/${SUBJECT}"
  if [[ $? != 0 ]]; then echo "Verify ${SUBJECT} error!" >&2; exit 1; fi
  #
  SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
