@@ -255,6 +255,7 @@ echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) /
 TIME_START="$(date +%s%3N)"
 
 BUILDS_PYTHON_SCRIPTS=()
+
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && MAKEFLAGS='' GNUMAKEFLAGS='' make RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
   NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
@@ -262,10 +263,11 @@ BUILDS_PYTHON_SCRIPTS=()
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
-(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/contrib/credential/osxkeychain/" \
- && MAKEFLAGS='' GNUMAKEFLAGS='' make "-j${BUILDS_JOBS}" CC='/usr/bin/clang' \
-  CFLAGS="-O3 -Wall -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS} -isysroot ${BUILDS_SDK_ROOT} -I../../.. -DNO_OPENSSL" \
-  LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS} -framework CoreServices -lz -liconv")
+(set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && MAKEFLAGS='' GNUMAKEFLAGS='' make 'contrib/credential/osxkeychain/git-credential-osxkeychain' RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
+  SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
+  sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo 'Make git-credential-osxkeychain error!' >&2; exit 1; fi
 
 TIME_NOW="$(date +%s%3N)"
