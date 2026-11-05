@@ -297,9 +297,9 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
- && make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+ && MAKEFLAGS='' GNUMAKEFLAGS='' make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
   NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
