@@ -258,14 +258,14 @@ BUILDS_PYTHON_SCRIPTS=()
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && MAKEFLAGS='' GNUMAKEFLAGS='' make RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
-  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
+  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 NO_RUST=1 ICONVDIR='' \
   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && MAKEFLAGS='' GNUMAKEFLAGS='' make 'contrib/credential/osxkeychain/git-credential-osxkeychain' RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
-  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
+  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 NO_RUST=1 ICONVDIR='' \
   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo 'Make git-credential-osxkeychain error!' >&2; exit 1; fi
@@ -281,7 +281,7 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  #
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
   && MAKEFLAGS='' GNUMAKEFLAGS='' make test RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
-   NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
+   NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 NO_RUST=1 ICONVDIR='' \
    SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
    sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
@@ -302,7 +302,7 @@ fi
 
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && MAKEFLAGS='' GNUMAKEFLAGS='' make install RUNTIME_PREFIX=1 DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
-  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
+  NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 NO_RUST=1 ICONVDIR='' \
   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
