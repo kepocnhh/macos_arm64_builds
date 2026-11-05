@@ -286,6 +286,13 @@ if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
    sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  #
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
+  && MAKEFLAGS='' GNUMAKEFLAGS='' make unit-tests RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+   NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 NO_RUST=1 ICONVDIR='' \
+   SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
+   sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
+ if [[ $? != 0 ]]; then echo "Unit tests ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+ #
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/t/" \
   && PATH="${PWD}/../contrib/credential/osxkeychain:${PATH}" \
    GIT_TEST_CREDENTIAL_HELPER='osxkeychain' \
