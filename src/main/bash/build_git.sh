@@ -192,15 +192,13 @@ elif [[ "${HTTP_CODE}" != '200' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
  SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
  rm "${BUILDS_WORKDIR}/${SUBJECT}"
-
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
   --url "https://kernel.org/pub/software/scm/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.sign" \
   -o "${BUILDS_WORKDIR}/${SUBJECT}")
-
  if [[ $? -ne 0 ]]; then
   echo "Request \"${SUBJECT}\" error!" >&2; exit 1
  elif [[ "${HTTP_CODE}" != '200' ]]; then
@@ -216,8 +214,7 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
  GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar")
  gpg "${GPG_ARGS[@]}"
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
- rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar"
+ rm "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar"
  rm -rf "${GPG_HOMEDIR}"
 fi
 
