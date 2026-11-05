@@ -30,7 +30,7 @@ macos arm64 builds
 #### build [git](https://kernel.org/pub/software/scm/git/)
 
 ```
-./src/main/bash/build_git.sh --jobs max --version "${GIT_VERSION}" --public_key ./src/main/res/e1f0.gpg --checks true
+./src/main/bash/build_git.sh --jobs max --version "${GIT_VERSION}" --public_key ./src/main/res/e1f0.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ```
