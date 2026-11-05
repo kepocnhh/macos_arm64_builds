@@ -273,19 +273,19 @@ echo "Make ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000
  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
  TIME_START="$(date +%s%3N)"
  #
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
-  && make test RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
+  && MAKEFLAGS='' GNUMAKEFLAGS='' make test RUNTIME_PREFIX=1 "-j${BUILDS_JOBS}" \
    NO_HOMEBREW=1 NO_FINK=1 NO_DARWIN_PORTS=1 ICONVDIR='' \
    SCRIPT_PYTHON="${BUILDS_PYTHON_SCRIPTS[*]}" NO_TCLTK=1 \
    sysconfdir='/etc' gitexecdir='libexec/git-core' template_dir='share/git-core/templates')
  if [[ $? != 0 ]]; then echo "Test ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  #
  (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/t/" \
-  && PATH="$PWD/../contrib/credential/osxkeychain:$PATH" \
+  && PATH="${PWD}/../contrib/credential/osxkeychain:${PATH}" \
    GIT_TEST_CREDENTIAL_HELPER='osxkeychain' \
    GIT_TEST_CREDENTIAL_HELPER_SETUP='export HOME="${USER_HOME}" GIT_CONFIG_GLOBAL="/dev/null"' \
    ./t0303-credential-external.sh)
