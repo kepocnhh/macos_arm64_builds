@@ -235,7 +235,7 @@ TIME_START="$(date +%s%3N)"
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT} -DVIM_DEFAULTS_FILE=\\\"/dev/null\\\"" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
-  ./configure --prefix='/usr/local' --with-features="${BUILDS_FEATURES}" --disable-gui --without-x)
+  ./configure --prefix='/usr/local' --with-features="${BUILDS_FEATURES}" --disable-gui --without-x --without-local-dir)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
