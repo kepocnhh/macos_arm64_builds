@@ -215,7 +215,7 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 :> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
