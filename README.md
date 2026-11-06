@@ -103,6 +103,14 @@ git config --global credential.helper osxkeychain
 
 ---
 
+#### build [vim](https://github.com/vim/vim/releases/)
+
+```
+./src/main/bash/build_vim.sh --jobs max --version "${VIM_VERSION}" --checks true --min_cpu current --min_macos current
+```
+
+---
+
 #### build [xz](https://github.com/tukaani-project/xz/releases/)
 
 ```
