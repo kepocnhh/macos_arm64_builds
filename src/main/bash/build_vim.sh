@@ -271,19 +271,23 @@ fi
 if [[ $? != 0 ]]; then echo "Install ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 (set -x; cd "${BUILDS_WORKDIR}" \
  && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/${BUILDS_SUBJECT}" --version)
-if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+if [[ $? != 0 ]]; then echo "Get version of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+(set -x; cd "${BUILDS_WORKDIR}" \
+ && "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/xxd" --version)
+if [[ $? != 0 ]]; then echo "Get version of xxd error!" >&2; exit 1; fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
 [[ "${BUILDS_CHECKS}" != 'true' ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-unchecked"
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 (set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/" \
- && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" './bin')
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" './bin/vim' './bin/xxd' './share/vim/vim92/defaults.vim')
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
