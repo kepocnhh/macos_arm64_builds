@@ -194,40 +194,7 @@ fi
 #
 
 if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
- GPG_HOMEDIR="$(mktemp -d)"
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-ref.json"
- HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
-  -L --url "https://api.github.com/repos/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/git/ref/tags/v${BUILDS_VERSION}" \
-  -o "${GPG_HOMEDIR}/${SUBJECT}")
- if [[ $? -ne 0 ]]; then
-  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
- elif [[ "${HTTP_CODE}" != '200' ]]; then
-  echo "Response \"${SUBJECT}\" error!" >&2; exit 1
- fi
- #
- REF_SHA="$(yq -Mer '.object.sha' "${GPG_HOMEDIR}/${SUBJECT}")"
- if [[ $? != 0 ]]; then echo "Get ref sha of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- REF_TYPE="$(yq -Mer '.object.type' "${GPG_HOMEDIR}/${SUBJECT}")"
- if [[ $? != 0 || "${REF_TYPE}" != 'tag' ]]; then echo "Get ref type of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- #
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-tag.json"
- HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
-  -L --url "https://api.github.com/repos/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/git/tags/${REF_SHA}" \
-  -o "${GPG_HOMEDIR}/${SUBJECT}")
- if [[ $? -ne 0 ]]; then
-  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
- elif [[ "${HTTP_CODE}" != '200' ]]; then
-  echo "Response \"${SUBJECT}\" error!" >&2; exit 1
- fi
- #
- yq -Mer '.verification.payload | @base64' "${GPG_HOMEDIR}/${SUBJECT}" > "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.b64"
- if [[ $? != 0 ]]; then echo "Get payload of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
- for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
- gpg "${GPG_ARGS[@]}" --verify <(yq -Mer '.verification.signature' "${GPG_HOMEDIR}/${SUBJECT}") \
-  <(openssl base64 -d -in "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.b64")
- if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm -rf "${GPG_HOMEDIR}"
+ echo 'Not implemented!' >&2; exit 1 # todo
 fi
 
 #
@@ -236,7 +203,7 @@ rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
 if [[ $? != 0 ]]; then echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
