@@ -192,25 +192,38 @@ elif [[ "${HTTP_CODE}" != '200' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
- rm "${BUILDS_WORKDIR}/${SUBJECT}"
+ GPG_HOMEDIR="$(mktemp -d)"
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-ref.json"
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
-  -L --url "https://github.com/tukaani-project/${BUILDS_SUBJECT}/releases/download/v${BUILDS_VERSION}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz.sig" \
-  -o "${BUILDS_WORKDIR}/${SUBJECT}")
+  -L --url "https://api.github.com/repos/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/git/ref/tags/v${BUILDS_VERSION}" \
+  -o "${GPG_HOMEDIR}/${SUBJECT}")
  if [[ $? -ne 0 ]]; then
   echo "Request \"${SUBJECT}\" error!" >&2; exit 1
  elif [[ "${HTTP_CODE}" != '200' ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
- GPG_HOMEDIR="$(mktemp -d)"
+ #
+ REF_SHA="$(yq -Mer '.object.sha' "${GPG_HOMEDIR}/${SUBJECT}")"
+ if [[ $? != 0 ]]; then echo "Get ref sha of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+ #
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-tag.json"
+ HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
+  -L --url "https://api.github.com/repos/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/git/tags/${REF_SHA}" \
+  -o "${GPG_HOMEDIR}/${SUBJECT}")
+ if [[ $? -ne 0 ]]; then
+  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
+ elif [[ "${HTTP_CODE}" != '200' ]]; then
+  echo "Response \"${SUBJECT}\" error!" >&2; exit 1
+ fi
+ #
+ yq -Mer '.verification.payload | @base64' "${GPG_HOMEDIR}/${SUBJECT}" | openssl base64 -d > "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.pay"
+ if [[ $? != 0 ]]; then echo "Get payload of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
  for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
- GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
- gpg "${GPG_ARGS[@]}"
+ gpg "${GPG_ARGS[@]}" --verify <(yq -Mer '.verification.signature' "${GPG_HOMEDIR}/${SUBJECT}") "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.pay"
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${SUBJECT}"
  rm -rf "${GPG_HOMEDIR}"
 fi
 
