@@ -218,11 +218,12 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
  #
- yq -Mer '.verification.payload | @base64' "${GPG_HOMEDIR}/${SUBJECT}" | openssl base64 -d > "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.pay"
+ yq -Mer '.verification.payload | @base64' "${GPG_HOMEDIR}/${SUBJECT}" > "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.b64"
  if [[ $? != 0 ]]; then echo "Get payload of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
  for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
- gpg "${GPG_ARGS[@]}" --verify <(yq -Mer '.verification.signature' "${GPG_HOMEDIR}/${SUBJECT}") "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.pay"
+ gpg "${GPG_ARGS[@]}" --verify <(yq -Mer '.verification.signature' "${GPG_HOMEDIR}/${SUBJECT}") \
+  <(openssl base64 -d -in "${GPG_HOMEDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.b64")
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  rm -rf "${GPG_HOMEDIR}"
 fi
