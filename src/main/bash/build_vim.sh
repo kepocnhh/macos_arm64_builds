@@ -207,6 +207,8 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
  #
  REF_SHA="$(yq -Mer '.object.sha' "${GPG_HOMEDIR}/${SUBJECT}")"
  if [[ $? != 0 ]]; then echo "Get ref sha of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+ REF_TYPE="$(yq -Mer '.object.type' "${GPG_HOMEDIR}/${SUBJECT}")"
+ if [[ $? != 0 || "${REF_TYPE}" != 'tag' ]]; then echo "Get ref type of ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
  #
  SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-tag.json"
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
