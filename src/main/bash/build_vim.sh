@@ -1,6 +1,7 @@
 #!/usr/local/bin/bash
 
 unset BUILDS_CHECKS
+unset BUILDS_FEATURES
 unset BUILDS_JOBS
 unset BUILDS_MIN_CPU
 unset BUILDS_MIN_MACOS
@@ -15,6 +16,9 @@ while [[ $# -gt 0 ]]; do
   '--checks')
    if [[ -v BUILDS_CHECKS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_CHECKS="$2"; shift 2;;
+  '--features')
+   if [[ -v BUILDS_FEATURES ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
+   BUILDS_FEATURES="$2"; shift 2;;
   '--jobs')
    if [[ -v BUILDS_JOBS ]]; then echo "\"$1\" already used!" >&2; exit 1; fi
    BUILDS_JOBS="$2"; shift 2;;
@@ -49,6 +53,14 @@ if [[ -v BUILDS_CHECKS ]]; then
  esac
 else
  BUILDS_CHECKS='false'
+fi
+
+#
+
+if [[ -v BUILDS_FEATURES ]]; then
+ echo 'Not implemented!' >&2; exit 1 # todo
+else
+ BUILDS_FEATURES='tiny'
 fi
 
 #
@@ -223,7 +235,7 @@ TIME_START="$(date +%s%3N)"
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
-  ./configure --prefix='/usr/local' --disable-shared --enable-static)
+  ./configure --prefix='/usr/local' --with-features="${BUILDS_FEATURES}" --disable-gui --without-x)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
 echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} $(((TIME_NOW - TIME_START) / 1000))s" \
