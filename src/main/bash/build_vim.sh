@@ -232,7 +232,7 @@ TIME_START="$(date +%s%3N)"
 (set -x; cd "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" \
  && CC='/usr/bin/clang' \
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
-  CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
+  CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT} -DVIM_DEFAULTS_FILE=\\\"/dev/null\\\"" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
   ./configure --prefix='/usr/local' --with-features="${BUILDS_FEATURES}" --disable-gui --without-x)
@@ -287,7 +287,7 @@ if [[ $? != 0 ]]; then echo "Get version of xxd error!" >&2; exit 1; fi
 
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz"
 (set -x; cd "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/" \
- && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" './bin/vim' './bin/xxd' './share/vim/vim92/defaults.vim')
+ && tar -czf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}.tar.gz" './bin/vim' './bin/xxd')
 if [[ $? != 0 ]]; then echo "Tar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 
 #
