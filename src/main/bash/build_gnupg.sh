@@ -283,6 +283,10 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
   && MAKEFLAGS='' GNUMAKEFLAGS='' make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
  if [[ $? != 0 ]]; then echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ if [[ "${SUBJECTS[i]}" == "${BUILDS_SUBJECT}" ]]; then
+  printf '%s\n' 'rootdir = $GNUPG_HOME' > "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/gpgconf.ctl"
+  if [[ $? != 0 ]]; then echo 'Install gpgconf.ctl error!' >&2; exit 1; fi
+ fi
 done
 
 #
