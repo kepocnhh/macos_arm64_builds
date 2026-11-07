@@ -238,10 +238,13 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
 done
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 rm -rf "${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/bin/"
-:> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+:> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
+
+#
+
 for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  TIME_START="$(date +%s%3N)"
  CONFIGURE_ARGS=("--prefix=${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/")
@@ -250,33 +253,39 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
   && CC='/usr/bin/clang' \
    CXX='/usr/bin/clang++' \
-   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-m1 -mmacos-version-min=${BUILDS_MINVERSION}" \
-   CPPFLAGS="-isysroot ${BUILDS_SDKROOT}" \
-   LDFLAGS="-isysroot ${BUILDS_SDKROOT} -mmacos-version-min=${BUILDS_MINVERSION}" \
-   PATH="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/bin:${PATH}" \
+   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
+   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
+   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
+   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
    ./configure "${CONFIGURE_ARGS[@]}")
  if [[ $? != 0 ]]; then echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
-  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
- #
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
+done
+
+echo 'Not implemented!' >&2; exit 1 # todo
+for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  TIME_START="$(date +%s%3N)"
- (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make "-j${BUILDS_JOBS}")
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
+  && MAKEFLAGS='' GNUMAKEFLAGS='' make "-j${BUILDS_JOBS}")
  if [[ $? != 0 ]]; then echo "Make ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
  echo "Make ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
-  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+  >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
  #
  if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
   TIME_START="$(date +%s%3N)"
-  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make check)
+  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
+   && MAKEFLAGS='' GNUMAKEFLAGS='' make check)
   if [[ $? != 0 ]]; then echo "Check ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
   TIME_NOW="$(date +%s%3N)"
   echo "Check ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
-   >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-j${BUILDS_JOBS}.log"
+   >> "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-${BUILDS_SUFFIX}-j${BUILDS_JOBS}.log"
  fi
  #
- (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" && make install)
+ (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
+  && MAKEFLAGS='' GNUMAKEFLAGS='' make DESTDIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/" install)
  if [[ $? != 0 ]]; then echo "Install ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
 done
 
