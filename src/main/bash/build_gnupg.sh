@@ -293,6 +293,12 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
 done
 
 #
+
+(set -x; cd "${BUILDS_WORKDIR}" \
+ && GNUPG_HOME="$(realpath "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local")" "./bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/gpg" --version)
+if [[ $? != 0 ]]; then echo "Get version ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
+
+#
 echo 'Not implemented!' >&2; exit 1 # todo
 BUILDS_SUFFIX="macos-${BUILDS_MINVERSION}-${BUILDS_ARCH}"
 [[ "${#BUILDS_PUBLIC_KEYS[@]}" -eq 0 ]] && BUILDS_SUFFIX="${BUILDS_SUFFIX}-untrusted"
