@@ -228,14 +228,12 @@ if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 mkdir -p "${BUILDS_WORKDIR}/sources/"
 for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  rm -rf "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/"
- tar -xf "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2" \
-  -C "${BUILDS_WORKDIR}/sources/"
- if [[ $? != 0 ]]; then
-  echo "Untar ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
+ tar -xf "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2" -C "${BUILDS_WORKDIR}/sources/"
+ if [[ $? != 0 ]]; then echo "Untar ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
  rm "${BUILDS_WORKDIR}/${SUBJECTS[i]}-${SUBJECTS[i+1]}-sources.tar.bz2"
 done
 
