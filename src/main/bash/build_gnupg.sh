@@ -257,6 +257,8 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
    CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT} -I${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/include" \
    LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -L${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/lib -mmacos-version-min=${BUILDS_MIN_MACOS}" \
    MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
+   GPGRT_CONFIG="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}/usr/local/bin/gpgrt-config" \
+   PKG_CONFIG_SYSROOT_DIR="${BUILDS_WORKDIR}/bin/${BUILDS_SUBJECT}-${BUILDS_VERSION}" \
    ./configure "${CONFIGURE_ARGS[@]}")
  if [[ $? != 0 ]]; then echo "Configure ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
  TIME_NOW="$(date +%s%3N)"
