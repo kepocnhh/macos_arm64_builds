@@ -276,7 +276,7 @@ for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  if [[ "${BUILDS_CHECKS}" == 'true' ]]; then
   TIME_START="$(date +%s%3N)"
   (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
-   && MAKEFLAGS='' GNUMAKEFLAGS='' make check)
+   && MAKEFLAGS='' GNUMAKEFLAGS='' make check "-j${BUILDS_JOBS}")
   if [[ $? != 0 ]]; then echo "Test ${SUBJECTS[i]}-${SUBJECTS[i+1]} error!" >&2; exit 1; fi
   TIME_NOW="$(date +%s%3N)"
   echo "Test ${SUBJECTS[i]}-${SUBJECTS[i+1]} $(((TIME_NOW - TIME_START) / 1000))s" \
