@@ -248,8 +248,10 @@ mkdir -p "${BUILDS_WORKDIR}/bin/"
 for ((i = 0; i < ${#SUBJECTS[@]}; i+=2)); do
  TIME_START="$(date +%s%3N)"
  CONFIGURE_ARGS=('--prefix=/usr/local')
+ [[ "${SUBJECTS[i]}" == 'libgpg-error' ]] && CONFIGURE_ARGS+=('--disable-nls')
  [[ "${SUBJECTS[i]}" == 'libgcrypt' ]] && CONFIGURE_ARGS+=('--disable-asm')
  [[ "${SUBJECTS[i]}" != "${BUILDS_SUBJECT}" ]] && CONFIGURE_ARGS+=('--enable-static' '--disable-shared')
+ [[ "${SUBJECTS[i]}" == "${BUILDS_SUBJECT}" ]] && CONFIGURE_ARGS+=('--disable-nls' '--without-libiconv-prefix')
  (set -x; cd "${BUILDS_WORKDIR}/sources/${SUBJECTS[i]}-${SUBJECTS[i+1]}/" \
   && CC='/usr/bin/clang' \
    CXX='/usr/bin/clang++' \
