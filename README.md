@@ -74,7 +74,7 @@ git config --global credential.helper osxkeychain
 #### build [nano](https://ftp.gnu.org/gnu/nano/)
 
 ```
-./src/main/bash/build_nano.sh --jobs max --version "${NANO_VERSION}" --public_key ./src/main/res/168e.gpg
+./src/main/bash/build_nano.sh --jobs max --version "${NANO_VERSION}" --public_key ./src/main/res/168e.gpg --min_cpu current --min_macos current
 ```
 
 ---
