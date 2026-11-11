@@ -238,7 +238,7 @@ TIME_START="$(date +%s%3N)"
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
-  CURSES_LIB_WIDE='yes' \
+  CURSES_LIB_NAME='ncurses' CURSES_LIB='-lncurses' CURSES_LIB_WIDE='yes' \
   ./configure --prefix='/usr/local' --enable-utf8 --disable-libmagic --disable-nls)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
