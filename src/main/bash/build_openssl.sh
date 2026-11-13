@@ -179,14 +179,12 @@ BUILDS_ARCH='arm64'
 BUILDS_SUFFIX="macos-${BUILDS_MIN_MACOS}-${BUILDS_MIN_CPU}-${BUILDS_ARCH}"
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
 rm "${BUILDS_WORKDIR}/${SUBJECT}"
-
 HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
  -L --url "https://github.com/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/releases/download/${BUILDS_SUBJECT}-${BUILDS_VERSION}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz" \
  -o "${BUILDS_WORKDIR}/${SUBJECT}")
-
 if [[ $? -ne 0 ]]; then
  echo "Request \"${SUBJECT}\" error!" >&2; exit 1
 elif [[ "${HTTP_CODE}" != '200' ]]; then
@@ -194,35 +192,34 @@ elif [[ "${HTTP_CODE}" != '200' ]]; then
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
-if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
- SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
- rm "${BUILDS_WORKDIR}/${SUBJECT}"
 
+if [[ "${#BUILDS_PUBLIC_KEYS[@]}" -gt 0 ]]; then
+ GPG_HOMEDIR="$(mktemp -d)"
+ SUBJECT="${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.sig"
+ rm "${GPG_HOMEDIR}/${SUBJECT}"
  HTTP_CODE=$(curl -m 32 -w '%{http_code}' \
   -L --url "https://github.com/${BUILDS_SUBJECT}/${BUILDS_SUBJECT}/releases/download/${BUILDS_SUBJECT}-${BUILDS_VERSION}/${BUILDS_SUBJECT}-${BUILDS_VERSION}.tar.gz.asc" \
-  -o "${BUILDS_WORKDIR}/${SUBJECT}")
-
+  -o "${GPG_HOMEDIR}/${SUBJECT}")
  if [[ $? -ne 0 ]]; then
   echo "Request \"${SUBJECT}\" error!" >&2; exit 1
  elif [[ "${HTTP_CODE}" != '200' ]]; then
   echo "Response \"${SUBJECT}\" error!" >&2; exit 1
  fi
-
- GPG_HOMEDIR="$(mktemp -d)"
  GPG_ARGS=('--homedir' "${GPG_HOMEDIR}" '--no-default-keyring')
  for BUILDS_PUBLIC_KEY in "${BUILDS_PUBLIC_KEYS[@]}"; do GPG_ARGS+=('--keyring' "${BUILDS_PUBLIC_KEY}"); done
- GPG_ARGS+=('--verify' "${BUILDS_WORKDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
+ GPG_ARGS+=('--verify' "${GPG_HOMEDIR}/${SUBJECT}" "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz")
  gpg "${GPG_ARGS[@]}"
  if [[ $? != 0 ]]; then echo "Verify ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
- rm "${BUILDS_WORKDIR}/${SUBJECT}"
  rm -rf "${GPG_HOMEDIR}"
 fi
 
 #
-echo 'Not implemented!' >&2; exit 1 # todo
+
 rm -rf "${BUILDS_WORKDIR}/sources/${BUILDS_SUBJECT}-${BUILDS_VERSION}/"
 mkdir -p "${BUILDS_WORKDIR}/sources/"
+
+#
+
 tar -xf "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz" -C "${BUILDS_WORKDIR}/sources/"
 if [[ $? != 0 ]]; then echo "Untar ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 rm "${BUILDS_WORKDIR}/${BUILDS_SUBJECT}-${BUILDS_VERSION}-sources.tar.gz"
