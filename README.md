@@ -45,13 +45,13 @@ git config --global credential.helper osxkeychain
 ./src/main/bash/build_gnupg.sh --jobs max --version "${GNUPG_VERSION}" --public_key ./src/main/res/ac8e.gpg --public_key ./src/main/res/6daa.gpg --checks true --min_cpu current --min_macos current
 ```
 
+---
+
 #### build [grep](https://ftp.gnu.org/gnu/grep/)
 
 ```
 ./src/main/bash/build_grep.sh --version "${GREP_VERSION}" --jobs max --checks true --public_key ./src/main/res/155d.gpg --checks true --min_cpu current --min_macos current
 ```
-
----
 
 ---
 
@@ -82,7 +82,7 @@ git config --global credential.helper osxkeychain
 #### build [openssl](https://github.com/openssl/openssl/releases)
 
 ```
-./src/main/bash/build_openssl.sh --jobs max --version "${OPENSSL_VERSION}" --public_key ./src/main/res/ba54.gpg --public_key ./src/main/res/c46e.gpg --checks true
+./src/main/bash/build_openssl.sh --jobs max --version "${OPENSSL_VERSION}" --public_key ./src/main/res/ba54.gpg --public_key ./src/main/res/c46e.gpg --checks true --min_cpu current --min_macos current
 ```
 
 ---
