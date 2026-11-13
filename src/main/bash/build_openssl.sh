@@ -239,7 +239,7 @@ TIME_START="$(date +%s%3N)"
   CFLAGS="-O3 -arch ${BUILDS_ARCH} -mcpu=apple-${BUILDS_MIN_CPU} -mtune=apple-${BUILDS_MIN_CPU} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
   CPPFLAGS="-isysroot ${BUILDS_SDK_ROOT}" \
   LDFLAGS="-isysroot ${BUILDS_SDK_ROOT} -mmacos-version-min=${BUILDS_MIN_MACOS}" \
-  MAKEFLAGS='' GNUMAKEFLAGS='' CONFIG_SITE='/dev/null' \
+  MAKEFLAGS='' GNUMAKEFLAGS='' OPENSSL_LOCAL_CONFIG_DIR='/dev/null' \
   ./Configure darwin64-arm64 --prefix='/usr/local' --openssldir='/dev/null' no-shared no-module)
 if [[ $? != 0 ]]; then echo "Configure ${BUILDS_SUBJECT}-${BUILDS_VERSION} error!" >&2; exit 1; fi
 TIME_NOW="$(date +%s%3N)"
